@@ -1,0 +1,745 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Markdown Slide Deck</title>
+  <style>
+    :root {
+      --bg: #f7f8fa;
+      --panel: #ffffff;
+      --text: #1e2430;
+      --muted: #6d7789;
+      --border: #d9dfe8;
+      --accent: #1c7ed6;
+      --accent-soft: #e8f2fe;
+      --shadow: 0 14px 32px rgba(24, 32, 56, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Avenir Next", "Segoe UI", "Helvetica Neue", sans-serif;
+      background: radial-gradient(circle at top left, #ffffff 0%, var(--bg) 58%, #eef1f6 100%);
+      color: var(--text);
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      min-height: 100vh;
+      transition: grid-template-columns 220ms ease;
+    }
+
+    .app.rail-collapsed {
+      grid-template-columns: 56px 1fr;
+    }
+
+    .sidebar {
+      border-right: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.86);
+      backdrop-filter: blur(8px);
+      padding: 14px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .sidebar-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .sidebar-title {
+      margin: 0;
+      font-size: 15px;
+      letter-spacing: 0.01em;
+    }
+
+    .sidebar.collapsed .sidebar-title,
+    .sidebar.collapsed .upload-wrap,
+    .sidebar.collapsed .hint,
+    .sidebar.collapsed .thumb-list {
+      display: none;
+    }
+
+    .thumb-list {
+      overflow: auto;
+      padding-right: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .thumb {
+      border: 1px solid var(--border);
+      background: var(--panel);
+      border-radius: 9px;
+      padding: 8px;
+      cursor: pointer;
+      transition: border-color 140ms ease, transform 140ms ease;
+    }
+
+    .thumb:hover {
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
+
+    .thumb.active {
+      border-color: var(--accent);
+      box-shadow: inset 0 0 0 1px var(--accent-soft);
+      background: #f7fbff;
+    }
+
+    .thumb-index {
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    .thumb-title {
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.3;
+      color: #313a4b;
+      max-height: 32px;
+      overflow: hidden;
+    }
+
+    .upload-wrap {
+      border: 1px dashed var(--border);
+      border-radius: 10px;
+      padding: 10px;
+      background: #fbfcfe;
+    }
+
+    .upload-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      border: 1px solid var(--border);
+      background: white;
+      color: var(--text);
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: border-color 140ms ease, background 140ms ease;
+    }
+
+    .upload-btn:hover {
+      border-color: var(--accent);
+      background: #f8fbff;
+    }
+
+    .upload-btn input {
+      display: none;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+      margin: 0;
+    }
+
+    .main {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 30px;
+      min-width: 0;
+    }
+
+    .slide-shell {
+      width: min(1100px, 100%);
+      aspect-ratio: 16 / 9;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .slide {
+      height: 100%;
+      overflow: auto;
+      padding: clamp(26px, 4vw, 52px);
+      line-height: 1.5;
+      font-size: clamp(1rem, 1.16vw, 1.25rem);
+    }
+
+    .slide h1,
+    .slide h2,
+    .slide h3 {
+      line-height: 1.15;
+      margin-top: 0;
+      letter-spacing: -0.01em;
+    }
+
+    .slide h1 {
+      font-size: clamp(1.9rem, 3vw, 3rem);
+    }
+
+    .slide h2 {
+      font-size: clamp(1.6rem, 2.4vw, 2.4rem);
+    }
+
+    .slide h3 {
+      font-size: clamp(1.25rem, 1.8vw, 1.6rem);
+    }
+
+    .slide p,
+    .slide li,
+    .slide blockquote,
+    .slide pre {
+      margin: 0 0 0.8em;
+    }
+
+    .slide ul,
+    .slide ol {
+      padding-left: 1.4em;
+    }
+
+    .slide code {
+      background: #f0f4fa;
+      border-radius: 6px;
+      padding: 0.08em 0.34em;
+      font-size: 0.9em;
+    }
+
+    .slide pre {
+      background: #f0f4fa;
+      border: 1px solid #dbe2ed;
+      border-radius: 10px;
+      padding: 0.9em;
+      overflow: auto;
+    }
+
+    .slide pre code {
+      background: transparent;
+      padding: 0;
+    }
+
+    .slide blockquote {
+      margin-left: 0;
+      padding-left: 0.9em;
+      border-left: 4px solid #d6e8fc;
+      color: #425067;
+    }
+
+    .controls {
+      position: absolute;
+      left: 50%;
+      bottom: 16px;
+      transform: translateX(-50%);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.95);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 8px;
+      box-shadow: 0 10px 20px rgba(26, 36, 54, 0.12);
+      transition: opacity 220ms ease;
+      z-index: 20;
+    }
+
+    body.hide-controls .controls,
+    body.hide-controls .top-actions {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .top-actions {
+      position: absolute;
+      right: 20px;
+      top: 16px;
+      display: flex;
+      gap: 8px;
+      transition: opacity 220ms ease;
+      z-index: 20;
+    }
+
+    button {
+      border: 1px solid var(--border);
+      background: white;
+      color: var(--text);
+      border-radius: 999px;
+      min-width: 40px;
+      height: 40px;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 0 12px;
+      cursor: pointer;
+      transition: border-color 140ms ease, background 140ms ease;
+    }
+
+    button:hover {
+      border-color: var(--accent);
+      background: #f8fbff;
+    }
+
+    .slide-count {
+      font-size: 13px;
+      color: var(--muted);
+      min-width: 54px;
+      text-align: center;
+    }
+
+    .empty-state {
+      display: grid;
+      place-items: center;
+      height: 100%;
+      text-align: center;
+      color: var(--muted);
+      padding: 20px;
+    }
+
+    .empty-state strong {
+      color: var(--text);
+      font-size: 1.15rem;
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      border: 0;
+    }
+
+    @media (max-width: 900px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: absolute;
+        z-index: 40;
+        width: min(280px, 88vw);
+        height: 100vh;
+        transform: translateX(-100%);
+        transition: transform 220ms ease;
+      }
+
+      .app.mobile-rail-open .sidebar {
+        transform: translateX(0);
+      }
+
+      .app.rail-collapsed {
+        grid-template-columns: 1fr;
+      }
+
+      .main {
+        padding: 20px;
+      }
+
+      .top-actions {
+        right: 12px;
+        top: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app" class="app">
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-top">
+        <h2 class="sidebar-title">Slides</h2>
+        <button id="toggleRail" type="button" aria-label="Collapse thumbnail rail">◀</button>
+      </div>
+      <div class="upload-wrap">
+        <label class="upload-btn" for="fileInput">
+          Upload Markdown
+          <input id="fileInput" type="file" accept=".md,.markdown,text/markdown,text/plain" />
+        </label>
+      </div>
+      <p class="hint">Use <code>---</code> on its own line to split slides and <code>--</code> to begin speaker notes.</p>
+      <div id="thumbnails" class="thumb-list" aria-label="Slide thumbnails"></div>
+    </aside>
+
+    <main class="main">
+      <div class="top-actions">
+        <button id="openRail" type="button" aria-label="Show thumbnails">☰</button>
+        <button id="fullscreen" type="button">Fullscreen</button>
+      </div>
+
+      <section class="slide-shell" aria-live="polite">
+        <article id="slide" class="slide"></article>
+      </section>
+
+      <div class="controls" role="group" aria-label="Slide controls">
+        <button id="prev" type="button" aria-label="Previous slide">←</button>
+        <div id="counter" class="slide-count">0 / 0</div>
+        <button id="next" type="button" aria-label="Next slide">→</button>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const state = {
+      slides: [],
+      index: 0,
+      railCollapsed: false,
+      controlsTimer: null
+    };
+
+    const appEl = document.getElementById("app");
+    const sidebarEl = document.getElementById("sidebar");
+    const slideEl = document.getElementById("slide");
+    const thumbsEl = document.getElementById("thumbnails");
+    const counterEl = document.getElementById("counter");
+    const fileInputEl = document.getElementById("fileInput");
+    const prevBtn = document.getElementById("prev");
+    const nextBtn = document.getElementById("next");
+    const railToggleBtn = document.getElementById("toggleRail");
+    const railOpenBtn = document.getElementById("openRail");
+    const fullscreenBtn = document.getElementById("fullscreen");
+
+    function escapeHtml(input) {
+      return input
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+
+    function renderInline(text) {
+      let line = escapeHtml(text);
+      line = line.replace(/`([^`]+)`/g, "<code>$1</code>");
+      line = line.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+      line = line.replace(/\*([^*]+)\*/g, "<em>$1</em>");
+      line = line.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noreferrer">$1</a>');
+      return line;
+    }
+
+    function markdownToHtml(markdown) {
+      const lines = markdown.replace(/\r\n?/g, "\n").split("\n");
+      const html = [];
+      let inUl = false;
+      let inOl = false;
+      let inCode = false;
+
+      function closeLists() {
+        if (inUl) {
+          html.push("</ul>");
+          inUl = false;
+        }
+        if (inOl) {
+          html.push("</ol>");
+          inOl = false;
+        }
+      }
+
+      for (const rawLine of lines) {
+        const line = rawLine.trimEnd();
+
+        if (line.startsWith("```") && !inCode) {
+          closeLists();
+          inCode = true;
+          html.push("<pre><code>");
+          continue;
+        }
+
+        if (line.startsWith("```") && inCode) {
+          inCode = false;
+          html.push("</code></pre>");
+          continue;
+        }
+
+        if (inCode) {
+          html.push(escapeHtml(rawLine) + "\n");
+          continue;
+        }
+
+        if (!line) {
+          closeLists();
+          continue;
+        }
+
+        const heading = line.match(/^(#{1,3})\s+(.*)$/);
+        if (heading) {
+          closeLists();
+          const level = heading[1].length;
+          html.push(`<h${level}>${renderInline(heading[2])}</h${level}>`);
+          continue;
+        }
+
+        if (/^[-*]\s+/.test(line)) {
+          if (inOl) {
+            html.push("</ol>");
+            inOl = false;
+          }
+          if (!inUl) {
+            html.push("<ul>");
+            inUl = true;
+          }
+          html.push(`<li>${renderInline(line.replace(/^[-*]\s+/, ""))}</li>`);
+          continue;
+        }
+
+        if (/^\d+\.\s+/.test(line)) {
+          if (inUl) {
+            html.push("</ul>");
+            inUl = false;
+          }
+          if (!inOl) {
+            html.push("<ol>");
+            inOl = true;
+          }
+          html.push(`<li>${renderInline(line.replace(/^\d+\.\s+/, ""))}</li>`);
+          continue;
+        }
+
+        if (/^>\s?/.test(line)) {
+          closeLists();
+          html.push(`<blockquote>${renderInline(line.replace(/^>\s?/, ""))}</blockquote>`);
+          continue;
+        }
+
+        if (/^---$/.test(line)) {
+          closeLists();
+          html.push("<hr />");
+          continue;
+        }
+
+        closeLists();
+        html.push(`<p>${renderInline(line)}</p>`);
+      }
+
+      closeLists();
+      if (inCode) {
+        html.push("</code></pre>");
+      }
+      return html.join("");
+    }
+
+    function extractTitle(markdown, fallbackIndex) {
+      const lines = markdown.split(/\r\n?|\n/);
+      for (const raw of lines) {
+        const line = raw.trim();
+        if (!line || line === "--") {
+          continue;
+        }
+        if (line.startsWith("#")) {
+          return line.replace(/^#{1,6}\s*/, "").slice(0, 70) || `Slide ${fallbackIndex + 1}`;
+        }
+        return line.slice(0, 70);
+      }
+      return `Slide ${fallbackIndex + 1}`;
+    }
+
+    function parseSlides(markdown) {
+      const rawSlides = markdown
+        .replace(/\r\n?/g, "\n")
+        .split(/^---\s*$/m)
+        .map((chunk) => chunk.trim())
+        .filter(Boolean);
+
+      return rawSlides.map((raw, i) => {
+        const noteSeparator = raw.split(/^--\s*$/m);
+        const content = noteSeparator[0].trim();
+        const notes = noteSeparator.slice(1).join("\n").trim();
+        return {
+          content,
+          notes,
+          title: extractTitle(content, i),
+          html: markdownToHtml(content)
+        };
+      });
+    }
+
+    function renderSlide() {
+      if (!state.slides.length) {
+        slideEl.innerHTML = `
+          <div class="empty-state">
+            <div>
+              <strong>Upload a markdown file to begin</strong>
+              <p>Slides are split with <code>---</code> and speaker notes start with <code>--</code>.</p>
+            </div>
+          </div>
+        `;
+        counterEl.textContent = "0 / 0";
+        prevBtn.disabled = true;
+        nextBtn.disabled = true;
+        return;
+      }
+
+      const current = state.slides[state.index];
+      slideEl.innerHTML = current.html || "<p></p>";
+      counterEl.textContent = `${state.index + 1} / ${state.slides.length}`;
+      prevBtn.disabled = state.index === 0;
+      nextBtn.disabled = state.index === state.slides.length - 1;
+
+      const thumbs = thumbsEl.querySelectorAll(".thumb");
+      thumbs.forEach((thumb, idx) => {
+        thumb.classList.toggle("active", idx === state.index);
+      });
+    }
+
+    function renderThumbnails() {
+      thumbsEl.innerHTML = "";
+      state.slides.forEach((slide, idx) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "thumb" + (idx === state.index ? " active" : "");
+        button.setAttribute("aria-label", `Go to slide ${idx + 1}`);
+        button.innerHTML = `
+          <div class="thumb-index">${idx + 1}</div>
+          <p class="thumb-title">${slide.title}</p>
+        `;
+        button.addEventListener("click", () => {
+          state.index = idx;
+          renderSlide();
+          if (window.matchMedia("(max-width: 900px)").matches) {
+            appEl.classList.remove("mobile-rail-open");
+          }
+        });
+        thumbsEl.appendChild(button);
+      });
+    }
+
+    function goNext() {
+      if (state.index < state.slides.length - 1) {
+        state.index += 1;
+        renderSlide();
+      }
+    }
+
+    function goPrev() {
+      if (state.index > 0) {
+        state.index -= 1;
+        renderSlide();
+      }
+    }
+
+    function handleUpload(event) {
+      const file = event.target.files?.[0];
+      if (!file) {
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        const text = String(reader.result || "");
+        state.slides = parseSlides(text);
+        state.index = 0;
+        renderThumbnails();
+        renderSlide();
+      };
+      reader.readAsText(file);
+      event.target.value = "";
+    }
+
+    function syncRailState() {
+      const isMobile = window.matchMedia("(max-width: 900px)").matches;
+      if (isMobile) {
+        appEl.classList.remove("rail-collapsed");
+        railOpenBtn.style.display = "inline-flex";
+        return;
+      }
+
+      railOpenBtn.style.display = state.railCollapsed ? "inline-flex" : "none";
+      appEl.classList.toggle("rail-collapsed", state.railCollapsed);
+      sidebarEl.classList.toggle("collapsed", state.railCollapsed);
+      railToggleBtn.textContent = state.railCollapsed ? "▶" : "◀";
+    }
+
+    function startAutoHideTimer() {
+      document.body.classList.remove("hide-controls");
+      if (state.controlsTimer) {
+        clearTimeout(state.controlsTimer);
+      }
+
+      state.controlsTimer = setTimeout(() => {
+        document.body.classList.add("hide-controls");
+      }, 2300);
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    }
+
+    fileInputEl.addEventListener("change", handleUpload);
+    prevBtn.addEventListener("click", goPrev);
+    nextBtn.addEventListener("click", goNext);
+
+    railToggleBtn.addEventListener("click", () => {
+      state.railCollapsed = !state.railCollapsed;
+      syncRailState();
+    });
+
+    railOpenBtn.addEventListener("click", () => {
+      if (window.matchMedia("(max-width: 900px)").matches) {
+        appEl.classList.add("mobile-rail-open");
+      } else {
+        state.railCollapsed = false;
+        syncRailState();
+      }
+    });
+
+    fullscreenBtn.addEventListener("click", toggleFullscreen);
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowRight" || event.key === "PageDown" || event.key === " ") {
+        event.preventDefault();
+        goNext();
+      }
+      if (event.key === "ArrowLeft" || event.key === "PageUp") {
+        event.preventDefault();
+        goPrev();
+      }
+      if (event.key.toLowerCase() === "f") {
+        toggleFullscreen();
+      }
+      if (event.key.toLowerCase() === "t") {
+        if (window.matchMedia("(max-width: 900px)").matches) {
+          appEl.classList.toggle("mobile-rail-open");
+        } else {
+          state.railCollapsed = !state.railCollapsed;
+          syncRailState();
+        }
+      }
+      startAutoHideTimer();
+    });
+
+    document.addEventListener("mousemove", startAutoHideTimer);
+    document.addEventListener("click", startAutoHideTimer);
+
+    document.addEventListener("fullscreenchange", () => {
+      fullscreenBtn.textContent = document.fullscreenElement ? "Exit Fullscreen" : "Fullscreen";
+    });
+
+    window.addEventListener("resize", () => {
+      appEl.classList.remove("mobile-rail-open");
+      syncRailState();
+    });
+
+    renderSlide();
+    syncRailState();
+    startAutoHideTimer();
+  </script>
+</body>
+</html>
