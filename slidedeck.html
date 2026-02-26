@@ -262,6 +262,16 @@
       margin-top: 14px;
     }
 
+    .embed-warning {
+      margin-top: 14px;
+      padding: 10px 12px;
+      border: 1px solid #f2d6a8;
+      border-radius: 10px;
+      background: #fff6e7;
+      color: #7a5a20;
+      font-size: 0.9rem;
+    }
+
     #fileInput {
       display: none;
     }
@@ -329,6 +339,62 @@
       });
     }
 
+    function configureEmbeds() {
+      const contentRoot = slideEl.querySelector(".slide-content");
+      if (!contentRoot) {
+        return;
+      }
+
+      const iframes = Array.from(contentRoot.querySelectorAll("iframe"));
+      const isFileProtocol = window.location.protocol === "file:";
+      let hasYouTubeEmbed = false;
+
+      iframes.forEach((iframe) => {
+        const rawSrc = iframe.getAttribute("src") || "";
+        if (!rawSrc) {
+          return;
+        }
+
+        let url;
+        try {
+          url = new URL(rawSrc, window.location.href);
+        } catch {
+          return;
+        }
+
+        const host = url.hostname.toLowerCase();
+        const isYouTube =
+          host.includes("youtube.com") ||
+          host.includes("youtu.be") ||
+          host.includes("youtube-nocookie.com");
+
+        if (!isYouTube) {
+          return;
+        }
+
+        hasYouTubeEmbed = true;
+        iframe.referrerPolicy = "origin-when-cross-origin";
+        iframe.setAttribute("allowfullscreen", "");
+
+        if (window.location.protocol.startsWith("http") && !url.searchParams.get("origin")) {
+          url.searchParams.set("origin", window.location.origin);
+        }
+
+        if (host.includes("youtube.com") && !host.includes("youtube-nocookie.com")) {
+          url.hostname = "www.youtube-nocookie.com";
+        }
+
+        iframe.src = url.toString();
+      });
+
+      if (isFileProtocol && hasYouTubeEmbed) {
+        const warning = document.createElement("div");
+        warning.className = "embed-warning";
+        warning.textContent = "YouTube embed may fail in file:// mode (Error 153). Serve this app over http://localhost to enable it.";
+        contentRoot.appendChild(warning);
+      }
+    }
+
     function renderSlide() {
       if (!state.slides.length) {
         slideEl.innerHTML = `
@@ -354,6 +420,7 @@
           <div class="slide-content">${state.slides[state.index].html || "<p></p>"}</div>
         </div>
       `;
+      configureEmbeds();
       updateSlideAlignment();
       slideEl.scrollTop = 0;
       renderTrainMap();
