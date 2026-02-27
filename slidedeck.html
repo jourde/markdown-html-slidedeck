@@ -72,6 +72,15 @@
       gap: 0;
     }
 
+    .app-title {
+      margin: 0 0 6px;
+      font-size: clamp(1.4rem, 2.2vw, 2rem);
+      line-height: 1.15;
+      letter-spacing: -0.01em;
+      color: #1b2638;
+      font-weight: 800;
+    }
+
     .upload-cta {
       border: 0;
       border-radius: 999px;
@@ -321,6 +330,196 @@
     .search-toggle .material-symbols-outlined {
       font-size: 24px;
       line-height: 1;
+    }
+
+    .delimiter-toggle {
+      border: 0;
+      border-radius: 999px;
+      background: #ffffff;
+      color: #2e3c54;
+      width: 44px;
+      height: 44px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(21, 34, 54, 0.14);
+      transition: transform 120ms ease, box-shadow 120ms ease;
+    }
+
+    .delimiter-toggle:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 22px rgba(21, 34, 54, 0.18);
+    }
+
+    .delimiter-toggle:focus-visible {
+      outline: 3px solid var(--focus-ring);
+      outline-offset: 2px;
+    }
+
+    .delimiter-toggle .material-symbols-outlined {
+      font-size: 24px;
+      line-height: 1;
+    }
+
+    .delimiter-panel {
+      position: fixed;
+      left: 0;
+      top: 0;
+      transform: none;
+      z-index: 56;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 8px;
+      background: #ffffff;
+      border: 1px solid #d5deeb;
+      border-radius: 10px;
+      padding: 8px;
+      min-width: 360px;
+      max-width: min(520px, calc(100vw - 24px));
+      max-height: calc(100vh - 24px);
+      overflow: auto;
+      box-shadow: 0 14px 28px rgba(21, 34, 54, 0.2), 0 0 0 3px rgba(255, 255, 255, 0.95);
+    }
+
+    .delimiter-panel[hidden] {
+      display: none;
+    }
+
+    .delimiter-quick {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid #dce4f0;
+      border-radius: 10px;
+      padding: 8px;
+      background: #f8fbff;
+    }
+
+    .delimiter-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .delimiter-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      color: #5d6c84;
+      padding: 0 2px;
+      text-transform: uppercase;
+      user-select: none;
+    }
+
+    .delimiter-sep {
+      width: 1px;
+      height: 22px;
+      background: #dde4f0;
+      margin: 0 2px;
+    }
+
+    .delimiter-option {
+      border: 1px solid #c7d3e5;
+      border-radius: 7px;
+      background: #fff;
+      color: #23324a;
+      font-size: 0.8rem;
+      padding: 4px 8px;
+      height: 30px;
+      min-width: 44px;
+      cursor: pointer;
+    }
+
+    .delimiter-option[aria-pressed="true"] {
+      border-color: #7ea9d6;
+      background: #eef5ff;
+      color: #174777;
+      font-weight: 700;
+    }
+
+    .delimiter-option:focus-visible {
+      outline: 3px solid var(--focus-ring);
+      outline-offset: 1px;
+    }
+
+    .delimiter-fields {
+      display: grid;
+      gap: 6px;
+      border: 1px solid #dce4f0;
+      border-radius: 10px;
+      padding: 8px;
+      background: #ffffff;
+    }
+
+    .delimiter-field {
+      display: grid;
+      grid-template-columns: 70px 1fr;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .delimiter-field label {
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: #56657e;
+      text-transform: uppercase;
+    }
+
+    .delimiter-field input {
+      border: 1px solid #c7d3e5;
+      border-radius: 8px;
+      height: 30px;
+      padding: 4px 8px;
+      font-size: 0.82rem;
+      color: #23324a;
+      width: 150px;
+      background: #fdfefe;
+    }
+
+    .delimiter-field input:focus-visible {
+      outline: 3px solid var(--focus-ring);
+      outline-offset: 1px;
+      border-color: #7ea9d6;
+    }
+
+    .delimiter-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 2px;
+    }
+
+    .delimiter-section-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      color: #60708a;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+      user-select: none;
+    }
+
+    .delimiter-apply {
+      border: 0;
+      border-radius: 8px;
+      background: #1c7ed6;
+      color: #ffffff;
+      font-size: 0.8rem;
+      font-weight: 700;
+      height: 32px;
+      padding: 0 12px;
+      cursor: pointer;
+    }
+
+    .delimiter-apply:hover {
+      background: #176ab5;
+    }
+
+    .delimiter-apply:focus-visible {
+      outline: 3px solid var(--focus-ring);
+      outline-offset: 1px;
     }
 
     .arrows-toggle {
@@ -577,23 +776,104 @@
     }
 
     .empty {
-      display: grid;
-      place-items: center;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
       height: 100%;
       text-align: center;
       color: var(--muted);
       font-size: clamp(1rem, 1.2vw, 1.2rem);
+      padding-top: clamp(20px, 8vh, 96px);
     }
 
     .empty strong {
       display: block;
-      font-size: clamp(1.2rem, 2vw, 1.6rem);
+      font-size: clamp(1.2rem, 1.9vw, 1.52rem);
       color: var(--text);
-      margin-bottom: 8px;
+      margin-bottom: 12px;
     }
 
-    .empty .upload-cta {
-      margin-top: 14px;
+    .empty-flow {
+      margin-top: 4px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      border: 1px solid #d7e1ef;
+      border-radius: 14px;
+      background: #ffffff;
+      padding: 8px;
+    }
+
+    .empty-step {
+      min-width: 180px;
+      border: 1px solid #bacbe2;
+      border-radius: 12px;
+      background: #ffffff;
+      padding: 10px 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #31445f;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+    }
+
+    .empty-step.primary {
+      background: #1c7ed6;
+      border-color: #1c7ed6;
+      color: #ffffff;
+      box-shadow: 0 6px 16px rgba(28, 126, 214, 0.2);
+    }
+
+    .empty-step.primary .empty-step-index {
+      background: rgba(255, 255, 255, 0.24);
+      color: #ffffff;
+    }
+
+    .empty-step.primary .material-symbols-outlined {
+      color: #ffffff;
+    }
+
+    .empty-step:hover {
+      transform: translateY(-1px);
+      border-color: #b8c8de;
+      box-shadow: 0 4px 10px rgba(21, 34, 54, 0.08);
+    }
+
+    .empty-step:focus-visible {
+      outline: 3px solid var(--focus-ring);
+      outline-offset: 2px;
+    }
+
+    .empty-step-index {
+      width: 20px;
+      height: 20px;
+      border-radius: 999px;
+      background: #eaf3ff;
+      color: #1c5fa0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.72rem;
+      font-weight: 700;
+      flex: 0 0 20px;
+    }
+
+    .empty-step .material-symbols-outlined {
+      font-size: 19px;
+      line-height: 1;
+      color: #3f5f86;
+    }
+
+    .empty-flow-arrow {
+      color: #8595ac;
+      font-size: 0.95rem;
+      font-weight: 700;
+      user-select: none;
     }
 
     .embed-warning {
@@ -756,10 +1036,32 @@
       .upload-cta:hover,
       .map-toggle:hover:not(:disabled),
       .search-toggle:hover,
+      .delimiter-toggle:hover,
       .arrows-toggle:hover,
       .station:hover,
       .station.active {
         transform: none !important;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .empty {
+        padding-top: clamp(12px, 4vh, 44px);
+      }
+
+      .empty-flow {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .empty-step {
+        width: 100%;
+        min-width: 0;
+        justify-content: center;
+      }
+
+      .empty-flow-arrow {
+        transform: rotate(90deg);
       }
     }
   </style>
@@ -767,6 +1069,7 @@
 <body>
   <a class="skip-link" href="#slide">Skip to slide content</a>
   <main class="app">
+    <h1 class="app-title">Markdown Slide Deck</h1>
     <input id="fileInput" type="file" accept=".md,.markdown,text/markdown,text/plain" />
     <article id="slide" class="slide" aria-live="polite" aria-atomic="true" role="region" aria-label="Slide content" tabindex="-1"></article>
     <nav id="trainMap" class="train-map" aria-label="Slide train map"></nav>
@@ -774,6 +1077,40 @@
   <button id="mapToggle" class="map-toggle" type="button" aria-label="Show or hide route line" title="Show or hide route line" aria-controls="trainMap" aria-expanded="false">
     <span class="material-symbols-outlined" aria-hidden="true">route</span>
   </button>
+  <section id="delimiterPanel" class="delimiter-panel" role="group" aria-label="Delimiter choices" hidden>
+    <div>
+      <div class="delimiter-section-title">Quick Buttons</div>
+      <div class="delimiter-quick">
+        <div class="delimiter-group" role="group" aria-label="Slide marker options">
+          <span class="delimiter-label">Slides</span>
+          <button class="delimiter-option" type="button" data-kind="slide" data-delimiter="===" aria-pressed="true">===</button>
+          <button class="delimiter-option" type="button" data-kind="slide" data-delimiter="---" aria-pressed="false">---</button>
+        </div>
+        <span class="delimiter-sep" aria-hidden="true"></span>
+        <div class="delimiter-group" role="group" aria-label="Speaker notes marker options">
+          <span class="delimiter-label">Notes</span>
+          <button class="delimiter-option" type="button" data-kind="notes" data-delimiter="--" aria-pressed="true">--</button>
+          <button class="delimiter-option" type="button" data-kind="notes" data-delimiter="notes:" aria-pressed="false">notes:</button>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="delimiter-section-title">Custom Fields</div>
+      <div class="delimiter-fields">
+        <div class="delimiter-field">
+          <label for="slideDelimiterInput">Slides</label>
+          <input id="slideDelimiterInput" type="text" value="===" aria-label="Slide delimiter value" />
+        </div>
+        <div class="delimiter-field">
+          <label for="notesDelimiterInput">Notes</label>
+          <input id="notesDelimiterInput" type="text" value="--" aria-label="Speaker notes delimiter value" />
+        </div>
+      </div>
+    </div>
+    <div class="delimiter-actions">
+      <button id="delimiterApply" class="delimiter-apply" type="button">Apply</button>
+    </div>
+  </section>
   <button id="arrowsToggle" class="arrows-toggle" type="button" aria-label="Show or hide navigation arrows" title="Show or hide navigation arrows" aria-controls="prevArrow nextArrow" aria-expanded="false">
     <span class="material-symbols-outlined" aria-hidden="true">swap_horiz</span>
   </button>
@@ -814,7 +1151,10 @@
         activeIndex: -1,
         panelOpen: false
       },
-      showNavArrows: false
+      showNavArrows: false,
+      slideDelimiter: "===",
+      notesDelimiter: "--",
+      sourceMarkdown: ""
     };
 
     const appEl = document.querySelector(".app");
@@ -822,6 +1162,12 @@
     const fileInputEl = document.getElementById("fileInput");
     const trainMapEl = document.getElementById("trainMap");
     const mapToggleEl = document.getElementById("mapToggle");
+    const delimiterToggleEl = document.getElementById("delimiterToggle");
+    const delimiterPanelEl = document.getElementById("delimiterPanel");
+    const delimiterOptionEls = Array.from(document.querySelectorAll(".delimiter-option"));
+    const slideDelimiterInputEl = document.getElementById("slideDelimiterInput");
+    const notesDelimiterInputEl = document.getElementById("notesDelimiterInput");
+    const delimiterApplyEl = document.getElementById("delimiterApply");
     const arrowsToggleEl = document.getElementById("arrowsToggle");
     const searchToggleEl = document.getElementById("searchToggle");
     const searchPanelEl = document.getElementById("searchPanel");
@@ -833,6 +1179,11 @@
     const prevArrowEl = document.getElementById("prevArrow");
     const nextArrowEl = document.getElementById("nextArrow");
     const srStatusEl = document.getElementById("srStatus");
+    const delimiterDraft = {
+      slide: "===",
+      notes: "--"
+    };
+    let delimiterAnchorEl = null;
 
     function announceStatus(message) {
       if (!srStatusEl) {
@@ -1000,14 +1351,21 @@
     function parseSlides(markdown) {
       const { content, metadata } = extractFrontmatter(markdown);
       state.frontmatter = metadata;
+      const slideDelimiter = state.slideDelimiter || "===";
+      const notesDelimiter = String(state.notesDelimiter || "");
+      const slideEscaped = slideDelimiter.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const splitRegex = new RegExp(`^${slideEscaped}\\s*$`, "m");
+      const notesRegex = notesDelimiter
+        ? new RegExp(`^${notesDelimiter.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*$`, "m")
+        : null;
 
       const rawSlides = content
-        .split(/^===\s*$/m)
+        .split(splitRegex)
         .map((chunk) => chunk.trim())
         .filter(Boolean);
 
       return rawSlides.map((raw) => {
-        const noteSeparator = raw.split(/^--\s*$/m);
+        const noteSeparator = notesRegex ? raw.split(notesRegex) : [raw];
         const content = noteSeparator[0].trim();
         const enhanced = applyObsidianSyntax(content);
         return {
@@ -1354,6 +1712,89 @@
       setSearchPanelOpen(!state.search.panelOpen);
     }
 
+    function renderDelimiterUI() {
+      delimiterOptionEls.forEach((option) => {
+        const kind = option.dataset.kind;
+        const activeSlide = delimiterPanelEl.hidden ? state.slideDelimiter : delimiterDraft.slide;
+        const activeNotes = delimiterPanelEl.hidden ? state.notesDelimiter : delimiterDraft.notes;
+        const selected = kind === "notes"
+          ? option.dataset.delimiter === activeNotes
+          : option.dataset.delimiter === activeSlide;
+        option.setAttribute("aria-pressed", String(selected));
+      });
+      if (slideDelimiterInputEl) {
+        slideDelimiterInputEl.value = delimiterPanelEl.hidden ? state.slideDelimiter : delimiterDraft.slide;
+      }
+      if (notesDelimiterInputEl) {
+        notesDelimiterInputEl.value = delimiterPanelEl.hidden ? state.notesDelimiter : delimiterDraft.notes;
+      }
+    }
+
+    function positionDelimiterPanel(anchorEl) {
+      if (!delimiterPanelEl || !anchorEl || delimiterPanelEl.hidden) {
+        return;
+      }
+
+      const rect = anchorEl.getBoundingClientRect();
+      const panelRect = delimiterPanelEl.getBoundingClientRect();
+      const margin = 12;
+      const gap = 14;
+      let left = rect.left;
+      let top = rect.bottom + gap;
+
+      const maxLeft = Math.max(margin, window.innerWidth - panelRect.width - margin);
+      left = Math.min(Math.max(margin, left), maxLeft);
+
+      const overBottom = top + panelRect.height > window.innerHeight - margin;
+      if (overBottom) {
+        top = rect.top - panelRect.height - gap;
+      }
+      top = Math.max(margin, top);
+
+      delimiterPanelEl.style.left = `${Math.round(left)}px`;
+      delimiterPanelEl.style.top = `${Math.round(top)}px`;
+    }
+
+    function setDelimiterPanelOpen(open, anchorEl = null) {
+      delimiterPanelEl.hidden = !open;
+      if (open) {
+        delimiterDraft.slide = state.slideDelimiter;
+        delimiterDraft.notes = state.notesDelimiter;
+        delimiterAnchorEl = anchorEl || document.querySelector("[data-action='delimiter-toggle']");
+      }
+      renderDelimiterUI();
+      if (open) {
+        positionDelimiterPanel(delimiterAnchorEl);
+      }
+      if (delimiterToggleEl) {
+        delimiterToggleEl.setAttribute("aria-expanded", String(open));
+      }
+      const inlineToggles = Array.from(document.querySelectorAll("[data-action='delimiter-toggle']"));
+      inlineToggles.forEach((toggle) => {
+        toggle.setAttribute("aria-expanded", String(open));
+      });
+    }
+
+    function applyDelimiters(slideDelimiter, notesDelimiter, announce = true) {
+      const nextSlide = String(slideDelimiter || "").trim();
+      if (!nextSlide) {
+        announceStatus("Slide delimiter cannot be empty.");
+        return false;
+      }
+      state.slideDelimiter = nextSlide;
+      state.notesDelimiter = String(notesDelimiter || "").trim();
+      if (state.sourceMarkdown) {
+        state.slides = parseSlides(state.sourceMarkdown);
+        state.index = Math.min(state.index, Math.max(0, state.slides.length - 1));
+      }
+      renderSlide();
+      if (announce) {
+        const notesMarker = state.notesDelimiter || "none";
+        announceStatus(`Delimiters applied. Slides: ${state.slideDelimiter}. Notes: ${notesMarker}.`);
+      }
+      return true;
+    }
+
     function rebuildSearchResults() {
       const query = state.search.query.trim().toLowerCase();
       state.search.results = [];
@@ -1511,14 +1952,28 @@
         slideEl.innerHTML = `
           <div class="empty">
             <div>
-              <strong>Upload a markdown file</strong>
-              <div>Use <code>===</code> for slides and <code>--</code> for speaker notes.</div>
-              <button class="upload-cta" type="button" data-action="upload" aria-label="Import markdown file">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8zm-2 18H8v-2h4zm2-4H8v-2h6zm0-4H8v-2h6zm-1-3V3.5L18.5 9z"/>
-                </svg>
-                Import .md File
-              </button>
+              <strong>Start by choosing delimiters, then import your Markdown file</strong>
+              <div class="empty-flow">
+                <button
+                  class="empty-step"
+                  type="button"
+                  data-action="delimiter-toggle"
+                  aria-label="Choose delimiters"
+                  title="Choose delimiters"
+                  aria-controls="delimiterPanel"
+                  aria-expanded="false"
+                >
+                  <span class="empty-step-index">1</span>
+                  <span class="material-symbols-outlined">format_line_spacing</span>
+                  <span>Choose delimiters</span>
+                </button>
+                <span class="empty-flow-arrow">→</span>
+                <button class="empty-step primary" type="button" data-action="upload" aria-label="Import markdown file" title="Import markdown file">
+                  <span class="empty-step-index">2</span>
+                  <span class="material-symbols-outlined">upload_file</span>
+                  <span>Import MD file</span>
+                </button>
+              </div>
             </div>
           </div>
         `;
@@ -1671,6 +2126,7 @@
       const reader = new FileReader();
       reader.onload = () => {
         const text = String(reader.result || "");
+        state.sourceMarkdown = text;
         state.slides = parseSlides(text);
         state.index = 0;
         if (state.search.query.trim()) {
@@ -1683,12 +2139,46 @@
     }
 
     slideEl.addEventListener("click", (event) => {
-      const target = event.target.closest("[data-action='upload']");
-      if (target) {
+      const target = event.target.closest("[data-action]");
+      if (!target) {
+        return;
+      }
+      const action = target.getAttribute("data-action");
+      if (action === "upload") {
         fileInputEl.click();
+      }
+      if (action === "delimiter-toggle") {
+        if (delimiterPanelEl.hidden) {
+          setDelimiterPanelOpen(true, target);
+        }
       }
     });
     fileInputEl.addEventListener("change", handleUpload);
+    delimiterOptionEls.forEach((option) => {
+      option.addEventListener("click", () => {
+        const kind = option.dataset.kind;
+        if (kind === "notes") {
+          delimiterDraft.notes = option.dataset.delimiter || "--";
+        } else {
+          delimiterDraft.slide = option.dataset.delimiter || "===";
+        }
+        renderDelimiterUI();
+      });
+    });
+    slideDelimiterInputEl?.addEventListener("input", () => {
+      delimiterDraft.slide = slideDelimiterInputEl.value;
+      renderDelimiterUI();
+    });
+    notesDelimiterInputEl?.addEventListener("input", () => {
+      delimiterDraft.notes = notesDelimiterInputEl.value;
+      renderDelimiterUI();
+    });
+    delimiterApplyEl?.addEventListener("click", () => {
+      const applied = applyDelimiters(delimiterDraft.slide, delimiterDraft.notes);
+      if (applied) {
+        setDelimiterPanelOpen(false);
+      }
+    });
     mapToggleEl.addEventListener("click", () => {
       if (!state.slides.length) {
         return;
@@ -1777,6 +2267,12 @@
       }
     });
 
+    renderDelimiterUI();
+    window.addEventListener("resize", () => {
+      if (!delimiterPanelEl.hidden) {
+        positionDelimiterPanel(delimiterAnchorEl);
+      }
+    });
     window.addEventListener("resize", updateSlideAlignment);
 
     renderSlide();
