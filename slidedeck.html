@@ -982,7 +982,7 @@
       state.frontmatter = metadata;
 
       const rawSlides = content
-        .split(/^---\s*$/m)
+        .split(/^===\s*$/m)
         .map((chunk) => chunk.trim())
         .filter(Boolean);
 
@@ -1460,7 +1460,7 @@
           <div class="empty">
             <div>
               <strong>Upload a markdown file</strong>
-              <div>Use <code>---</code> for slides and <code>--</code> for speaker notes.</div>
+              <div>Use <code>===</code> for slides and <code>--</code> for speaker notes.</div>
               <button class="upload-cta" type="button" data-action="upload" aria-label="Import markdown file">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8zm-2 18H8v-2h4zm2-4H8v-2h6zm0-4H8v-2h6zm-1-3V3.5L18.5 9z"/>
