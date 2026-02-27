@@ -1085,6 +1085,7 @@
           <span class="delimiter-label">Slides</span>
           <button class="delimiter-option" type="button" data-kind="slide" data-delimiter="===" aria-pressed="true">===</button>
           <button class="delimiter-option" type="button" data-kind="slide" data-delimiter="---" aria-pressed="false">---</button>
+          <button class="delimiter-option" type="button" data-kind="slide-mode" data-mode="h1" aria-pressed="false"># H1</button>
         </div>
         <span class="delimiter-sep" aria-hidden="true"></span>
         <div class="delimiter-group" role="group" aria-label="Speaker notes marker options">
@@ -1152,6 +1153,7 @@
         panelOpen: false
       },
       showNavArrows: false,
+      slideSplitMode: "delimiter",
       slideDelimiter: "===",
       notesDelimiter: "--",
       sourceMarkdown: ""
@@ -1181,6 +1183,7 @@
     const nextArrowEl = document.getElementById("nextArrow");
     const srStatusEl = document.getElementById("srStatus");
     const delimiterDraft = {
+      slideMode: "delimiter",
       slide: "===",
       notes: "--"
     };
@@ -1349,9 +1352,56 @@
       return transformFootnotes(text);
     }
 
+    function splitSlidesByH1(content) {
+      const lines = content.replace(/\r\n?/g, "\n").split("\n");
+      const slides = [];
+      let current = [];
+      let inFence = false;
+      let fenceChar = "";
+
+      const pushCurrent = () => {
+        const chunk = current.join("\n").trim();
+        if (chunk) {
+          slides.push(chunk);
+        }
+      };
+
+      for (let i = 0; i < lines.length; i += 1) {
+        const line = lines[i];
+        const trimmed = line.trim();
+        const fenceMatch = trimmed.match(/^(```+|~~~+)/);
+
+        if (fenceMatch) {
+          const marker = fenceMatch[1];
+          const markerChar = marker[0];
+          if (!inFence) {
+            inFence = true;
+            fenceChar = markerChar;
+          } else if (fenceChar === markerChar) {
+            inFence = false;
+            fenceChar = "";
+          }
+          current.push(line);
+          continue;
+        }
+
+        const isH1 = !inFence && /^\s{0,3}#\s+.+$/.test(line);
+        if (isH1) {
+          pushCurrent();
+          current = [line];
+          continue;
+        }
+        current.push(line);
+      }
+
+      pushCurrent();
+      return slides;
+    }
+
     function parseSlides(markdown) {
       const { content, metadata } = extractFrontmatter(markdown);
       state.frontmatter = metadata;
+      const slideSplitMode = state.slideSplitMode === "h1" ? "h1" : "delimiter";
       const slideDelimiter = state.slideDelimiter || "===";
       const notesDelimiter = String(state.notesDelimiter || "");
       const slideEscaped = slideDelimiter.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -1360,10 +1410,12 @@
         ? new RegExp(`^${notesDelimiter.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*$`, "m")
         : null;
 
-      const rawSlides = content
-        .split(splitRegex)
-        .map((chunk) => chunk.trim())
-        .filter(Boolean);
+      const rawSlides = slideSplitMode === "h1"
+        ? splitSlidesByH1(content)
+        : content
+          .split(splitRegex)
+          .map((chunk) => chunk.trim())
+          .filter(Boolean);
 
       return rawSlides.map((raw) => {
         const noteSeparator = notesRegex ? raw.split(notesRegex) : [raw];
@@ -1716,15 +1768,20 @@
     function renderDelimiterUI() {
       delimiterOptionEls.forEach((option) => {
         const kind = option.dataset.kind;
+        const activeMode = delimiterPanelEl.hidden ? state.slideSplitMode : delimiterDraft.slideMode;
         const activeSlide = delimiterPanelEl.hidden ? state.slideDelimiter : delimiterDraft.slide;
         const activeNotes = delimiterPanelEl.hidden ? state.notesDelimiter : delimiterDraft.notes;
-        const selected = kind === "notes"
-          ? option.dataset.delimiter === activeNotes
-          : option.dataset.delimiter === activeSlide;
+        const selected = kind === "slide-mode"
+          ? activeMode === "h1"
+          : kind === "notes"
+            ? option.dataset.delimiter === activeNotes
+            : activeMode === "delimiter" && option.dataset.delimiter === activeSlide;
         option.setAttribute("aria-pressed", String(selected));
       });
       if (slideDelimiterInputEl) {
         slideDelimiterInputEl.value = delimiterPanelEl.hidden ? state.slideDelimiter : delimiterDraft.slide;
+        const activeMode = delimiterPanelEl.hidden ? state.slideSplitMode : delimiterDraft.slideMode;
+        slideDelimiterInputEl.disabled = activeMode === "h1";
       }
       if (notesDelimiterInputEl) {
         notesDelimiterInputEl.value = delimiterPanelEl.hidden ? state.notesDelimiter : delimiterDraft.notes;
@@ -1759,6 +1816,7 @@
     function setDelimiterPanelOpen(open, anchorEl = null) {
       delimiterPanelEl.hidden = !open;
       if (open) {
+        delimiterDraft.slideMode = state.slideSplitMode;
         delimiterDraft.slide = state.slideDelimiter;
         delimiterDraft.notes = state.notesDelimiter;
         delimiterAnchorEl = anchorEl || document.querySelector("[data-action='delimiter-toggle']");
@@ -1776,13 +1834,17 @@
       });
     }
 
-    function applyDelimiters(slideDelimiter, notesDelimiter, announce = true) {
+    function applyDelimiters(slideMode, slideDelimiter, notesDelimiter, announce = true) {
+      const nextMode = slideMode === "h1" ? "h1" : "delimiter";
       const nextSlide = String(slideDelimiter || "").trim();
-      if (!nextSlide) {
+      if (nextMode === "delimiter" && !nextSlide) {
         announceStatus("Slide delimiter cannot be empty.");
         return false;
       }
-      state.slideDelimiter = nextSlide;
+      state.slideSplitMode = nextMode;
+      if (nextSlide) {
+        state.slideDelimiter = nextSlide;
+      }
       state.notesDelimiter = String(notesDelimiter || "").trim();
       if (state.sourceMarkdown) {
         state.slides = parseSlides(state.sourceMarkdown);
@@ -1791,7 +1853,11 @@
       renderSlide();
       if (announce) {
         const notesMarker = state.notesDelimiter || "none";
-        announceStatus(`Delimiters applied. Slides: ${state.slideDelimiter}. Notes: ${notesMarker}.`);
+        if (state.slideSplitMode === "h1") {
+          announceStatus(`Delimiters applied. Slide mode: H1 headings. Notes: ${notesMarker}.`);
+        } else {
+          announceStatus(`Delimiters applied. Slide mode: delimiter (${state.slideDelimiter}). Notes: ${notesMarker}.`);
+        }
       }
       return true;
     }
@@ -2164,15 +2230,19 @@
     delimiterOptionEls.forEach((option) => {
       option.addEventListener("click", () => {
         const kind = option.dataset.kind;
-        if (kind === "notes") {
+        if (kind === "slide-mode") {
+          delimiterDraft.slideMode = "h1";
+        } else if (kind === "notes") {
           delimiterDraft.notes = option.dataset.delimiter || "--";
         } else {
+          delimiterDraft.slideMode = "delimiter";
           delimiterDraft.slide = option.dataset.delimiter || "===";
         }
         renderDelimiterUI();
       });
     });
     slideDelimiterInputEl?.addEventListener("input", () => {
+      delimiterDraft.slideMode = "delimiter";
       delimiterDraft.slide = slideDelimiterInputEl.value;
       renderDelimiterUI();
     });
@@ -2181,7 +2251,7 @@
       renderDelimiterUI();
     });
     delimiterApplyEl?.addEventListener("click", () => {
-      const applied = applyDelimiters(delimiterDraft.slide, delimiterDraft.notes);
+      const applied = applyDelimiters(delimiterDraft.slideMode, delimiterDraft.slide, delimiterDraft.notes);
       if (applied) {
         setDelimiterPanelOpen(false);
       }
