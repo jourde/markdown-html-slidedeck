@@ -83,11 +83,15 @@
 
     .app-footer {
       width: min(1280px, 100%);
-      display: flex;
+      display: none;
       justify-content: center;
       padding: 10px 0 4px;
       font-size: 0.9rem;
       color: var(--muted);
+    }
+
+    .app.show-footer .app-footer {
+      display: flex;
     }
 
     .repo-link {
@@ -2037,6 +2041,9 @@
 
     function renderSlide() {
       if (!state.slides.length) {
+        if (appEl) {
+          appEl.classList.add("show-footer");
+        }
         if (appTitleEl) {
           appTitleEl.hidden = false;
         }
@@ -2076,6 +2083,9 @@
 
       if (appTitleEl) {
         appTitleEl.hidden = true;
+      }
+      if (appEl) {
+        appEl.classList.remove("show-footer");
       }
       slideEl.innerHTML = `
         <div class="slide-center">
