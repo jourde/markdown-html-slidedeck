@@ -604,6 +604,30 @@
       display: none;
     }
 
+    .clock-chip {
+      position: fixed;
+      right: 192px;
+      top: 16px;
+      min-width: 84px;
+      height: 44px;
+      padding: 0 14px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.92);
+      color: #2b3a52;
+      font-size: 0.92rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      box-shadow: 0 8px 20px rgba(21, 34, 54, 0.12);
+      backdrop-filter: blur(8px);
+    }
+
+    .clock-chip[hidden] {
+      display: none;
+    }
+
     .timer-toggle {
       position: fixed;
       right: 16px;
@@ -1210,10 +1234,12 @@
   <button id="timerToggle" class="timer-toggle" type="button" aria-label="Open timer controls" title="Open timer controls" aria-haspopup="true" aria-controls="timerMenu" aria-expanded="false">
     <span class="material-symbols-outlined" aria-hidden="true">timer</span>
   </button>
+  <div id="clockChip" class="clock-chip" aria-live="polite" aria-atomic="true" hidden>00:00:00</div>
   <section id="timerMenu" class="timer-menu" role="menu" aria-label="Timer controls" hidden>
     <button id="timerPrimaryAction" class="timer-action" type="button" role="menuitem">Start</button>
     <button id="timerVisibilityAction" class="timer-action" type="button" role="menuitem">Hide</button>
     <button id="timerResetAction" class="timer-action" type="button" role="menuitem">Reset</button>
+    <button id="timerModeAction" class="timer-action" type="button" role="menuitem">Show Current Time</button>
   </section>
   <section id="delimiterPanel" class="delimiter-panel" role="group" aria-label="Delimiter choices" hidden>
     <div>
@@ -1294,7 +1320,8 @@
         running: false,
         startedAt: 0,
         elapsedMs: 0,
-        visible: true
+        visible: true,
+        showClock: false
       },
       showNavArrows: false,
       slideSplitMode: "h1",
@@ -1310,9 +1337,11 @@
     const trainMapEl = document.getElementById("trainMap");
     const mapToggleEl = document.getElementById("mapToggle");
     const timerChipEl = document.getElementById("timerChip");
+    const clockChipEl = document.getElementById("clockChip");
     const timerToggleEl = document.getElementById("timerToggle");
     const timerMenuEl = document.getElementById("timerMenu");
     const timerPrimaryActionEl = document.getElementById("timerPrimaryAction");
+    const timerModeActionEl = document.getElementById("timerModeAction");
     const timerVisibilityActionEl = document.getElementById("timerVisibilityAction");
     const timerResetActionEl = document.getElementById("timerResetAction");
     const delimiterToggleEl = document.getElementById("delimiterToggle");
@@ -1358,6 +1387,11 @@
       return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
     }
 
+    function formatCurrentTime() {
+      const now = new Date();
+      return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+    }
+
     function getTimerElapsedMs() {
       if (!state.timer.running) {
         return state.timer.elapsedMs;
@@ -1366,10 +1400,13 @@
     }
 
     function updateTimerUI() {
-      const elapsedMs = getTimerElapsedMs();
       if (timerChipEl) {
-        timerChipEl.textContent = formatElapsedTime(elapsedMs);
+        timerChipEl.textContent = formatElapsedTime(getTimerElapsedMs());
         timerChipEl.hidden = !state.timer.visible;
+      }
+      if (clockChipEl) {
+        clockChipEl.textContent = formatCurrentTime();
+        clockChipEl.hidden = !state.timer.showClock;
       }
       if (timerPrimaryActionEl) {
         timerPrimaryActionEl.textContent = state.timer.running
@@ -1377,6 +1414,9 @@
           : state.timer.elapsedMs
             ? "Resume"
             : "Start";
+      }
+      if (timerModeActionEl) {
+        timerModeActionEl.textContent = state.timer.showClock ? "Hide Current Time" : "Show Current Time";
       }
       if (timerVisibilityActionEl) {
         timerVisibilityActionEl.textContent = state.timer.visible ? "Hide" : "Show";
@@ -1431,6 +1471,12 @@
     function setTimerMenuOpen(open) {
       timerMenuEl.hidden = !open;
       timerToggleEl.setAttribute("aria-expanded", String(open));
+    }
+
+    function toggleTimerMode() {
+      state.timer.showClock = !state.timer.showClock;
+      updateTimerUI();
+      announceStatus(state.timer.showClock ? "Current time shown." : "Current time hidden.");
     }
 
     function toggleTimerVisibility() {
@@ -2521,6 +2567,10 @@
     });
     timerPrimaryActionEl.addEventListener("click", () => {
       toggleTimer();
+      setTimerMenuOpen(false);
+    });
+    timerModeActionEl.addEventListener("click", () => {
+      toggleTimerMode();
       setTimerMenuOpen(false);
     });
     timerVisibilityActionEl.addEventListener("click", () => {
