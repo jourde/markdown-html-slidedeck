@@ -580,6 +580,108 @@
       line-height: 1;
     }
 
+    .timer-chip {
+      position: fixed;
+      right: 68px;
+      top: 16px;
+      min-width: 84px;
+      height: 44px;
+      padding: 0 14px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.92);
+      color: #2b3a52;
+      font-size: 0.92rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      box-shadow: 0 8px 20px rgba(21, 34, 54, 0.12);
+      backdrop-filter: blur(8px);
+    }
+
+    .timer-chip[hidden] {
+      display: none;
+    }
+
+    .timer-toggle {
+      position: fixed;
+      right: 16px;
+      top: 16px;
+      border: 0;
+      border-radius: 999px;
+      background: #ffffff;
+      color: #2e3c54;
+      width: 44px;
+      height: 44px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(21, 34, 54, 0.14);
+      transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease, color 120ms ease;
+    }
+
+    .timer-toggle.is-running {
+      background: var(--accent);
+      color: #ffffff;
+    }
+
+    .timer-toggle:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 22px rgba(21, 34, 54, 0.18);
+    }
+
+    .timer-toggle:focus-visible {
+      outline: 3px solid var(--focus-ring);
+      outline-offset: 2px;
+    }
+
+    .timer-toggle .material-symbols-outlined {
+      font-size: 24px;
+      line-height: 1;
+    }
+
+    .timer-menu {
+      position: fixed;
+      right: 16px;
+      top: 68px;
+      z-index: 60;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 132px;
+      padding: 8px;
+      border: 1px solid #d5deeb;
+      border-radius: 12px;
+      background: #ffffff;
+      box-shadow: 0 10px 24px rgba(21, 34, 54, 0.16);
+    }
+
+    .timer-menu[hidden] {
+      display: none;
+    }
+
+    .timer-action {
+      width: 100%;
+      height: 34px;
+      border: 1px solid #c9d4e5;
+      border-radius: 8px;
+      background: #fff;
+      color: #2f3d55;
+      cursor: pointer;
+      font-size: 0.84rem;
+      font-weight: 600;
+      text-align: left;
+      padding: 0 10px;
+    }
+
+    .timer-action:focus-visible {
+      outline: 3px solid var(--focus-ring);
+      outline-offset: 1px;
+    }
+
     .nav-arrow {
       position: fixed;
       top: 50%;
@@ -1104,6 +1206,15 @@
   <button id="mapToggle" class="map-toggle" type="button" aria-label="Show or hide route line" title="Show or hide route line" aria-controls="trainMap" aria-expanded="false">
     <span class="material-symbols-outlined" aria-hidden="true">route</span>
   </button>
+  <div id="timerChip" class="timer-chip" aria-live="polite" aria-atomic="true">00:00:00</div>
+  <button id="timerToggle" class="timer-toggle" type="button" aria-label="Open timer controls" title="Open timer controls" aria-haspopup="true" aria-controls="timerMenu" aria-expanded="false">
+    <span class="material-symbols-outlined" aria-hidden="true">timer</span>
+  </button>
+  <section id="timerMenu" class="timer-menu" role="menu" aria-label="Timer controls" hidden>
+    <button id="timerPrimaryAction" class="timer-action" type="button" role="menuitem">Start</button>
+    <button id="timerVisibilityAction" class="timer-action" type="button" role="menuitem">Hide</button>
+    <button id="timerResetAction" class="timer-action" type="button" role="menuitem">Reset</button>
+  </section>
   <section id="delimiterPanel" class="delimiter-panel" role="group" aria-label="Delimiter choices" hidden>
     <div>
       <div class="delimiter-section-title">Quick Buttons</div>
@@ -1179,6 +1290,12 @@
         activeIndex: -1,
         panelOpen: false
       },
+      timer: {
+        running: false,
+        startedAt: 0,
+        elapsedMs: 0,
+        visible: true
+      },
       showNavArrows: false,
       slideSplitMode: "h1",
       slideDelimiter: "===",
@@ -1192,6 +1309,12 @@
     const fileInputEl = document.getElementById("fileInput");
     const trainMapEl = document.getElementById("trainMap");
     const mapToggleEl = document.getElementById("mapToggle");
+    const timerChipEl = document.getElementById("timerChip");
+    const timerToggleEl = document.getElementById("timerToggle");
+    const timerMenuEl = document.getElementById("timerMenu");
+    const timerPrimaryActionEl = document.getElementById("timerPrimaryAction");
+    const timerVisibilityActionEl = document.getElementById("timerVisibilityAction");
+    const timerResetActionEl = document.getElementById("timerResetAction");
     const delimiterToggleEl = document.getElementById("delimiterToggle");
     const delimiterPanelEl = document.getElementById("delimiterPanel");
     const delimiterOptionEls = Array.from(document.querySelectorAll(".delimiter-option"));
@@ -1215,6 +1338,7 @@
       notes: "--"
     };
     let delimiterAnchorEl = null;
+    let timerIntervalId = null;
 
     function announceStatus(message) {
       if (!srStatusEl) {
@@ -1224,6 +1348,95 @@
       window.requestAnimationFrame(() => {
         srStatusEl.textContent = message;
       });
+    }
+
+    function formatElapsedTime(totalMs) {
+      const totalSeconds = Math.max(0, Math.floor(totalMs / 1000));
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+      return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+    }
+
+    function getTimerElapsedMs() {
+      if (!state.timer.running) {
+        return state.timer.elapsedMs;
+      }
+      return state.timer.elapsedMs + (Date.now() - state.timer.startedAt);
+    }
+
+    function updateTimerUI() {
+      const elapsedMs = getTimerElapsedMs();
+      if (timerChipEl) {
+        timerChipEl.textContent = formatElapsedTime(elapsedMs);
+        timerChipEl.hidden = !state.timer.visible;
+      }
+      if (timerPrimaryActionEl) {
+        timerPrimaryActionEl.textContent = state.timer.running
+          ? "Pause"
+          : state.timer.elapsedMs
+            ? "Resume"
+            : "Start";
+      }
+      if (timerVisibilityActionEl) {
+        timerVisibilityActionEl.textContent = state.timer.visible ? "Hide" : "Show";
+      }
+      if (timerToggleEl) {
+        timerToggleEl.classList.toggle("is-running", state.timer.running);
+        timerToggleEl.setAttribute("aria-expanded", String(!timerMenuEl.hidden));
+        timerToggleEl.setAttribute("aria-label", "Open timer controls");
+        timerToggleEl.title = "Open timer controls";
+      }
+    }
+
+    function stopTimerTick() {
+      if (timerIntervalId !== null) {
+        window.clearInterval(timerIntervalId);
+        timerIntervalId = null;
+      }
+    }
+
+    function startTimerTick() {
+      stopTimerTick();
+      timerIntervalId = window.setInterval(updateTimerUI, 250);
+    }
+
+    function toggleTimer() {
+      if (state.timer.running) {
+        state.timer.elapsedMs = getTimerElapsedMs();
+        state.timer.running = false;
+        state.timer.startedAt = 0;
+        stopTimerTick();
+        updateTimerUI();
+        announceStatus("Timer paused.");
+        return;
+      }
+
+      state.timer.running = true;
+      state.timer.startedAt = Date.now();
+      startTimerTick();
+      updateTimerUI();
+      announceStatus(state.timer.elapsedMs ? "Timer resumed." : "Timer started.");
+    }
+
+    function resetTimer() {
+      state.timer.running = false;
+      state.timer.startedAt = 0;
+      state.timer.elapsedMs = 0;
+      stopTimerTick();
+      updateTimerUI();
+      announceStatus("Timer reset.");
+    }
+
+    function setTimerMenuOpen(open) {
+      timerMenuEl.hidden = !open;
+      timerToggleEl.setAttribute("aria-expanded", String(open));
+    }
+
+    function toggleTimerVisibility() {
+      state.timer.visible = !state.timer.visible;
+      updateTimerUI();
+      announceStatus(state.timer.visible ? "Timer shown." : "Timer hidden.");
     }
 
     function escapeHtml(input) {
@@ -2303,6 +2516,21 @@
       renderNavArrows();
       announceStatus(state.showNavArrows ? "Navigation arrows shown." : "Navigation arrows hidden.");
     });
+    timerToggleEl.addEventListener("click", () => {
+      setTimerMenuOpen(timerMenuEl.hidden);
+    });
+    timerPrimaryActionEl.addEventListener("click", () => {
+      toggleTimer();
+      setTimerMenuOpen(false);
+    });
+    timerVisibilityActionEl.addEventListener("click", () => {
+      toggleTimerVisibility();
+      setTimerMenuOpen(false);
+    });
+    timerResetActionEl.addEventListener("click", () => {
+      resetTimer();
+      setTimerMenuOpen(false);
+    });
     prevArrowEl.addEventListener("click", goPrev);
     nextArrowEl.addEventListener("click", goNext);
     searchToggleEl.addEventListener("click", () => {
@@ -2373,9 +2601,27 @@
       if (event.key === "Escape" && state.search.panelOpen) {
         setSearchPanelOpen(false);
       }
+      if (event.key === "Escape" && !timerMenuEl.hidden) {
+        setTimerMenuOpen(false);
+      }
+    });
+
+    document.addEventListener("click", (event) => {
+      const target = event.target;
+      if (!(target instanceof Node)) {
+        return;
+      }
+      if (timerMenuEl.hidden) {
+        return;
+      }
+      if (timerMenuEl.contains(target) || timerToggleEl.contains(target)) {
+        return;
+      }
+      setTimerMenuOpen(false);
     });
 
     renderDelimiterUI();
+    updateTimerUI();
     window.addEventListener("resize", () => {
       if (!delimiterPanelEl.hidden) {
         positionDelimiterPanel(delimiterAnchorEl);
