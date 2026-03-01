@@ -1230,7 +1230,7 @@
   <button id="mapToggle" class="map-toggle" type="button" aria-label="Show or hide route line" title="Show or hide route line" aria-controls="trainMap" aria-expanded="false">
     <span class="material-symbols-outlined" aria-hidden="true">route</span>
   </button>
-  <div id="timerChip" class="timer-chip" aria-live="polite" aria-atomic="true">00:00:00</div>
+  <div id="timerChip" class="timer-chip" aria-live="polite" aria-atomic="true" hidden>00:00:00</div>
   <button id="timerToggle" class="timer-toggle" type="button" aria-label="Open timer controls" title="Open timer controls" aria-haspopup="true" aria-controls="timerMenu" aria-expanded="false">
     <span class="material-symbols-outlined" aria-hidden="true">timer</span>
   </button>
@@ -1320,7 +1320,7 @@
         running: false,
         startedAt: 0,
         elapsedMs: 0,
-        visible: true,
+        visible: false,
         showClock: false
       },
       showNavArrows: false,
