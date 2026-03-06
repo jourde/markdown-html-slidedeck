@@ -283,6 +283,18 @@
       user-select: none;
     }
 
+    .station-duration {
+      font-size: 9px;
+      line-height: 1;
+      color: #8595ac;
+      font-weight: 500;
+      user-select: none;
+    }
+
+    .train-map.has-durations {
+      height: 82px;
+    }
+
     .map-toggle {
       position: fixed;
       right: 16px;
@@ -1026,6 +1038,56 @@
       user-select: none;
     }
 
+    .empty-guide {
+      margin-top: 18px;
+      text-align: left;
+      background: #f8fafd;
+      border: 1px solid #d7e1ef;
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 0.83rem;
+      color: #3e4c64;
+      max-width: 520px;
+    }
+
+    .empty-guide-title {
+      font-weight: 700;
+      color: #1b2638;
+      margin-bottom: 10px;
+      font-size: 0.85rem;
+    }
+
+    .empty-guide pre {
+      margin: 0 0 10px;
+      background: #edf3fa;
+      border: 1px solid #d7e1ef;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 0.79rem;
+      line-height: 1.65;
+      white-space: pre;
+      overflow-x: auto;
+      color: #2a3748;
+    }
+
+    .empty-guide-legend {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .empty-guide code {
+      background: #e4edf8;
+      border-radius: 4px;
+      padding: 0.05em 0.3em;
+      font-size: 0.78rem;
+      color: #1c5fa0;
+      white-space: nowrap;
+    }
+
     .embed-warning {
       margin-top: 14px;
       padding: 10px 12px;
@@ -1517,6 +1579,27 @@
         .replace(/\s+/g, "-");
     }
 
+    function parseDuration(str) {
+      const s = String(str || "").trim().toLowerCase();
+      const full = s.match(/^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?$/);
+      if (full && (full[1] || full[2] || full[3])) {
+        return (parseInt(full[1] || 0, 10) * 3600)
+          + (parseInt(full[2] || 0, 10) * 60)
+          + parseInt(full[3] || 0, 10);
+      }
+      const colon = s.match(/^(\d+):(\d{2})$/);
+      if (colon) {
+        return parseInt(colon[1], 10) * 60 + parseInt(colon[2], 10);
+      }
+      return null;
+    }
+
+    function formatDuration(totalSeconds) {
+      const m = Math.floor(totalSeconds / 60);
+      const s = totalSeconds % 60;
+      return s ? `${m}:${String(s).padStart(2, "0")}` : `${m}m`;
+    }
+
     function extractFrontmatter(markdown) {
       const normalized = markdown.replace(/\r\n?/g, "\n");
       if (!normalized.startsWith("---\n")) {
@@ -1692,8 +1775,12 @@
       const notesDelimiter = String(state.notesDelimiter || "");
       const slideEscaped = slideDelimiter.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       const splitRegex = new RegExp(`^${slideEscaped}\\s*$`, "m");
-      const notesRegex = notesDelimiter
-        ? new RegExp(`^${notesDelimiter.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*$`, "m")
+      const notesEscaped = notesDelimiter ? notesDelimiter.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") : null;
+      const notesRegex = notesEscaped
+        ? new RegExp(`^${notesEscaped}\\s*$`, "m")
+        : null;
+      const notesDurationRegex = notesEscaped
+        ? new RegExp(`^(${notesEscaped})[ \\t]+duration:\\s*([^\\n]*)$`, "im")
         : null;
 
       const rawSlides = slideSplitMode === "h1"
@@ -1704,13 +1791,22 @@
           .filter(Boolean);
 
       return rawSlides.map((raw) => {
-        const noteSeparator = notesRegex ? raw.split(notesRegex) : [raw];
+        let duration = null;
+        const rawForSplit = notesDurationRegex
+          ? raw.replace(notesDurationRegex, (_, delim, val) => {
+              duration = parseDuration(val.trim());
+              return delim;
+            })
+          : raw;
+
+        const noteSeparator = notesRegex ? rawForSplit.split(notesRegex) : [rawForSplit];
         const content = noteSeparator[0].trim();
         const enhanced = applyObsidianSyntax(content);
         return {
           content,
           notes: noteSeparator.slice(1).join("\n").trim(),
-          html: markdownToHtml(enhanced)
+          html: markdownToHtml(enhanced),
+          duration
         };
       });
     }
@@ -2306,6 +2402,15 @@
         if (appTitleEl) {
           appTitleEl.hidden = false;
         }
+        const isH1Mode = state.slideSplitMode === "h1";
+        const notesDel = escapeHtml(state.notesDelimiter || "--");
+        const slideDel = escapeHtml(state.slideDelimiter || "===");
+        const guideExample = isH1Mode
+          ? `# Slide title        ← each H1 starts a new slide\n\nContent here\u2026\n\n${notesDel} duration: 2m      ← notes delimiter + optional duration\nSpeaker notes\u2026\n\n# Next slide\u2026`
+          : `Slide title\n\nContent here\u2026\n\n${notesDel} duration: 2m      ← notes delimiter + optional duration\nSpeaker notes\u2026\n\n${slideDel}\n\nNext slide\u2026`;
+        const guideSlideRule = isH1Mode
+          ? `<li><code># H1</code> starts a new slide</li>`
+          : `<li><code>${slideDel}</code> separates slides</li>`;
         slideEl.innerHTML = `
           <div class="empty">
             <div>
@@ -2330,6 +2435,15 @@
                   <span class="material-symbols-outlined">upload_file</span>
                   <span>Import MD file</span>
                 </button>
+              </div>
+              <div class="empty-guide">
+                <div class="empty-guide-title">Markdown format reference</div>
+                <pre>${guideExample}</pre>
+                <ul class="empty-guide-legend">
+                  ${guideSlideRule}
+                  <li><code>${notesDel}</code> separates slide content from speaker notes</li>
+                  <li><code>${notesDel} duration: 2m</code> adds a timed duration <em>(e.g. 30s, 1m30s, 2:00)</em></li>
+                </ul>
               </div>
             </div>
           </div>
@@ -2446,7 +2560,10 @@
       const stationList = document.createElement("div");
       stationList.className = "station-list";
 
-      state.slides.forEach((_, idx) => {
+      const hasDurations = state.slides.some(s => s.duration != null);
+      trainMapEl.classList.toggle("has-durations", hasDurations);
+
+      state.slides.forEach((slide, idx) => {
         const step = document.createElement("div");
         step.className = "station-step";
 
@@ -2460,8 +2577,9 @@
           station.classList.add("active");
           station.setAttribute("aria-current", "step");
         }
-        station.setAttribute("aria-label", `Go to slide ${idx + 1}`);
-        station.title = `Slide ${idx + 1}`;
+        const durationLabel = slide.duration != null ? ` (${formatDuration(slide.duration)})` : "";
+        station.setAttribute("aria-label", `Go to slide ${idx + 1}${durationLabel}`);
+        station.title = `Slide ${idx + 1}${durationLabel}`;
         station.addEventListener("click", () => {
           state.index = idx;
           renderSlide();
@@ -2473,6 +2591,14 @@
 
         step.appendChild(station);
         step.appendChild(num);
+
+        if (slide.duration != null) {
+          const dur = document.createElement("span");
+          dur.className = "station-duration";
+          dur.textContent = formatDuration(slide.duration);
+          step.appendChild(dur);
+        }
+
         stationList.appendChild(step);
       });
 
