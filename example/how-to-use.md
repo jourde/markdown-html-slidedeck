@@ -11,13 +11,31 @@ Everything stays local in your browser. Nothing is uploaded anywhere.
 ## Getting Started
 
 1. Click **Choose delimiters** to confirm how your slides are separated
-2. Click **Import MD file** to load your Markdown file
+2. Load your Markdown — either **Import MD file** (local) or **Load from URL** (remote)
 3. Navigate with the **arrow keys** or the on-screen controls
 
 That's it. Your presentation is ready.
 
 -- duration: 45s
 The app parses your Markdown file entirely in the browser using the marked.js library.
+
+---
+
+## Load from URL
+
+Click **Load from URL** in the start screen to fetch a Markdown file directly from the web.
+
+Paste any public `https://` address into the input and click **Load** (or press `Enter`):
+
+- Raw GitHub files: `https://raw.githubusercontent.com/user/repo/main/slides.md`
+- GitHub Gists: `https://gist.githubusercontent.com/...`
+- Any publicly accessible `.md` file
+
+The file is fetched in your browser. The server must allow cross-origin requests (CORS).
+Press `Esc` or click **✕** to dismiss without loading.
+
+-- duration: 45s
+Raw GitHub URLs always support CORS. If you get a network error from another host, check that the server sends an Access-Control-Allow-Origin header.
 
 ---
 
@@ -207,7 +225,7 @@ The delimiter line must contain only the delimiter characters — no spaces befo
 - Use `---` on its own line; extra spaces will break detection
 - Speaker notes are a great place for **talking points** and **statistics**
 - The `# H1` delimiter mode works well for existing Markdown documents
-- All processing happens **in your browser** — your files never leave your device
+- Imported files stay **local** — nothing is uploaded; URL-loaded files are fetched directly from their host
 
 -- duration: 1m
 You can re-import a file at any time — the app will reload from the beginning.
