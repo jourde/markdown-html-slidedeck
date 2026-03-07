@@ -1087,6 +1087,14 @@
       padding: 0;
     }
 
+    .slide-content img {
+      max-width: 100%;
+      max-height: 65vh;
+      height: auto;
+      object-fit: contain;
+      display: block;
+    }
+
     .slide blockquote {
       margin-left: 0;
       padding-left: 0.9em;
@@ -1443,9 +1451,9 @@
       <div class="delimiter-quick">
         <div class="delimiter-group" role="group" aria-label="Slide marker options">
           <span class="delimiter-label">Slides</span>
-          <button class="delimiter-option" type="button" data-kind="slide-mode" data-mode="h1" aria-pressed="true"># H1</button>
+          <button class="delimiter-option" type="button" data-kind="slide" data-delimiter="---" aria-pressed="true">---</button>
           <button class="delimiter-option" type="button" data-kind="slide" data-delimiter="===" aria-pressed="false">===</button>
-          <button class="delimiter-option" type="button" data-kind="slide" data-delimiter="---" aria-pressed="false">---</button>
+          <button class="delimiter-option" type="button" data-kind="slide-mode" data-mode="h1" aria-pressed="false"># H1</button>
         </div>
         <span class="delimiter-sep" aria-hidden="true"></span>
         <div class="delimiter-group" role="group" aria-label="Speaker notes marker options">
@@ -1525,7 +1533,7 @@
         panelOpen: false
       },
       showNavArrows: false,
-      slideSplitMode: "h1",
+      slideSplitMode: "delimiter",
       slideDelimiter: "---",
       notesDelimiter: "--",
       sourceMarkdown: "",
@@ -1565,7 +1573,7 @@
     const nextArrowEl = document.getElementById("nextArrow");
     const srStatusEl = document.getElementById("srStatus");
     const delimiterDraft = {
-      slideMode: "h1",
+      slideMode: "delimiter",
       slide: "---",
       notes: "--"
     };
