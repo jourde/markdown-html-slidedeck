@@ -481,6 +481,40 @@
       line-height: 1;
     }
 
+    .fullscreen-toggle {
+      position: fixed;
+      right: 16px;
+      bottom: 222px;
+      border: 0;
+      border-radius: 999px;
+      background: #ffffff;
+      color: #2e3c54;
+      width: 44px;
+      height: 44px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(21, 34, 54, 0.14);
+      transition: transform 120ms ease, box-shadow 120ms ease;
+    }
+
+    .fullscreen-toggle:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 22px rgba(21, 34, 54, 0.18);
+    }
+
+    .fullscreen-toggle:focus-visible {
+      outline: 3px solid var(--focus-ring);
+      outline-offset: 2px;
+    }
+
+    .fullscreen-toggle .material-symbols-outlined {
+      font-size: 24px;
+      line-height: 1;
+    }
+
     .settings-toggle {
       position: fixed;
       right: 16px;
@@ -1488,6 +1522,9 @@
   <button id="searchToggle" class="search-toggle" type="button" aria-label="Search slides" title="Search slides" aria-controls="searchPanel" aria-expanded="false">
     <span class="material-symbols-outlined" aria-hidden="true">search</span>
   </button>
+  <button id="fullscreenToggle" class="fullscreen-toggle" type="button" aria-label="Enter fullscreen" title="Enter fullscreen (F)">
+    <span class="material-symbols-outlined" aria-hidden="true">fullscreen</span>
+  </button>
   <button id="settingsToggle" class="settings-toggle" type="button" aria-label="Interface settings" title="Interface settings" aria-controls="settingsPanel" aria-expanded="false">
     <span class="material-symbols-outlined" aria-hidden="true">tune</span>
   </button>
@@ -1557,6 +1594,7 @@
     const notesDelimiterInputEl = document.getElementById("notesDelimiterInput");
     const delimiterApplyEl = document.getElementById("delimiterApply");
     const delimiterGuideEl = document.getElementById("delimiterGuide");
+    const fullscreenToggleEl = document.getElementById("fullscreenToggle");
     const settingsToggleEl = document.getElementById("settingsToggle");
     const settingsPanelEl = document.getElementById("settingsPanel");
     const settingsSwatchesEl = settingsPanelEl?.querySelector(".settings-swatches");
@@ -2995,6 +3033,9 @@
         renderTrainMap();
         announceStatus(state.showTrainMap ? "Route map shown." : "Route map hidden.");
       }
+      if (event.key.toLowerCase() === "f" && !event.ctrlKey && !event.metaKey && !event.altKey) {
+        toggleFullscreen();
+      }
       if (event.key === "Escape" && state.search.panelOpen) {
         setSearchPanelOpen(false);
       }
@@ -3007,6 +3048,28 @@
       }
     });
     window.addEventListener("resize", updateSlideAlignment);
+
+    // ── Fullscreen ────────────────────────────────────────────────────────
+    function updateFullscreenButton() {
+      const isFS = !!document.fullscreenElement;
+      if (!fullscreenToggleEl) return;
+      fullscreenToggleEl.querySelector(".material-symbols-outlined").textContent =
+        isFS ? "fullscreen_exit" : "fullscreen";
+      fullscreenToggleEl.setAttribute("aria-label", isFS ? "Exit fullscreen" : "Enter fullscreen");
+      fullscreenToggleEl.title = isFS ? "Exit fullscreen (F)" : "Enter fullscreen (F)";
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    }
+
+    fullscreenToggleEl?.addEventListener("click", toggleFullscreen);
+    document.addEventListener("fullscreenchange", updateFullscreenButton);
+    // ─────────────────────────────────────────────────────────────────────
 
     // ── Settings panel events ─────────────────────────────────────────────
     settingsToggleEl?.addEventListener("click", () => {
