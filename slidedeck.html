@@ -670,6 +670,54 @@
       outline-offset: 1px;
     }
 
+    /* ── Delimiter panel: Markdown format guide section ── */
+    .delimiter-guide {
+      border-top: 1px solid #dce4f0;
+      padding-top: 8px;
+      margin-top: 2px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .delimiter-guide:empty {
+      display: none;
+    }
+
+    .delimiter-guide-pre {
+      margin: 0;
+      background: #edf3fa;
+      border: 1px solid #d7e1ef;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 0.72rem;
+      line-height: 1.55;
+      font-family: ui-monospace, "SF Mono", "Fira Code", "Cascadia Code", monospace;
+      white-space: pre;
+      overflow-x: auto;
+      color: #2a3748;
+    }
+
+    .delimiter-guide-legend {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 0.76rem;
+      color: #3e4c64;
+    }
+
+    .delimiter-guide-legend code {
+      background: #e4edf8;
+      border-radius: 4px;
+      padding: 0.05em 0.3em;
+      font-size: 0.78rem;
+      font-family: ui-monospace, "SF Mono", "Fira Code", "Cascadia Code", monospace;
+      color: #174777;
+    }
+
     .arrows-toggle {
       position: fixed;
       right: 16px;
@@ -1024,80 +1072,6 @@
       user-select: none;
     }
 
-    .empty-guide {
-      margin-top: 18px;
-      text-align: left;
-      background: #f8fafd;
-      border: 1px solid #d7e1ef;
-      border-radius: 12px;
-      padding: 14px 16px;
-      font-size: 0.83rem;
-      color: #3e4c64;
-      max-width: 520px;
-    }
-
-    .empty-guide-title {
-      font-weight: 700;
-      color: #1b2638;
-      font-size: 0.85rem;
-      cursor: pointer;
-      list-style: none;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      user-select: none;
-    }
-
-    .empty-guide-title::-webkit-details-marker {
-      display: none;
-    }
-
-    .empty-guide-title::before {
-      content: "▸";
-      font-size: 0.7rem;
-      color: #8595ac;
-      transition: transform 120ms ease;
-    }
-
-    .empty-guide[open] .empty-guide-title::before {
-      transform: rotate(90deg);
-    }
-
-    .empty-guide[open] .empty-guide-title {
-      margin-bottom: 10px;
-    }
-
-    .empty-guide pre {
-      margin: 0 0 10px;
-      background: #edf3fa;
-      border: 1px solid #d7e1ef;
-      border-radius: 8px;
-      padding: 10px 12px;
-      font-size: 0.79rem;
-      line-height: 1.65;
-      white-space: pre;
-      overflow-x: auto;
-      color: #2a3748;
-    }
-
-    .empty-guide-legend {
-      margin: 0;
-      padding: 0;
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .empty-guide code {
-      background: #e4edf8;
-      border-radius: 4px;
-      padding: 0.05em 0.3em;
-      font-size: 0.78rem;
-      color: #1c5fa0;
-      white-space: nowrap;
-    }
-
     .embed-warning {
       margin-top: 14px;
       padding: 10px 12px;
@@ -1337,7 +1311,7 @@
       <div class="delimiter-fields">
         <div class="delimiter-field">
           <label for="slideDelimiterInput">Slides</label>
-          <input id="slideDelimiterInput" type="text" value="===" aria-label="Slide delimiter value" />
+          <input id="slideDelimiterInput" type="text" value="---" aria-label="Slide delimiter value" />
         </div>
         <div class="delimiter-field">
           <label for="notesDelimiterInput">Notes</label>
@@ -1348,6 +1322,8 @@
     <div class="delimiter-actions">
       <button id="delimiterApply" class="delimiter-apply" type="button">Apply</button>
     </div>
+    <!-- Markdown format reference — populated by renderDelimiterUI() -->
+    <div id="delimiterGuide" class="delimiter-guide" aria-live="polite"></div>
   </section>
   <button id="arrowsToggle" class="arrows-toggle" type="button" aria-label="Show or hide navigation arrows" title="Show or hide navigation arrows" aria-controls="prevArrow nextArrow" aria-expanded="false">
     <span class="material-symbols-outlined" aria-hidden="true">swap_horiz</span>
@@ -1391,7 +1367,7 @@
       },
       showNavArrows: false,
       slideSplitMode: "h1",
-      slideDelimiter: "===",
+      slideDelimiter: "---",
       notesDelimiter: "--",
       sourceMarkdown: "",
       slideStartedAt: 0,
@@ -1413,6 +1389,7 @@
     const slideDelimiterInputEl = document.getElementById("slideDelimiterInput");
     const notesDelimiterInputEl = document.getElementById("notesDelimiterInput");
     const delimiterApplyEl = document.getElementById("delimiterApply");
+    const delimiterGuideEl = document.getElementById("delimiterGuide");
     const arrowsToggleEl = document.getElementById("arrowsToggle");
     const searchToggleEl = document.getElementById("searchToggle");
     const searchPanelEl = document.getElementById("searchPanel");
@@ -1426,7 +1403,7 @@
     const srStatusEl = document.getElementById("srStatus");
     const delimiterDraft = {
       slideMode: "h1",
-      slide: "===",
+      slide: "---",
       notes: "--"
     };
     let delimiterAnchorEl = null;
@@ -1665,7 +1642,7 @@
       const { content, metadata } = extractFrontmatter(markdown);
       state.frontmatter = metadata;
       const slideSplitMode = state.slideSplitMode === "h1" ? "h1" : "delimiter";
-      const slideDelimiter = state.slideDelimiter || "===";
+      const slideDelimiter = state.slideDelimiter || "---";
       const notesDelimiter = String(state.notesDelimiter || "");
       const slideEscaped = slideDelimiter.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       const splitRegex = new RegExp(`^${slideEscaped}\\s*$`, "m");
@@ -2041,6 +2018,30 @@
       setSearchPanelOpen(!state.search.panelOpen);
     }
 
+    function buildDelimiterGuideHTML(slideMode, slideDelimiter, notesDelimiter) {
+      const isH1 = slideMode === "h1";
+      const notesDel = escapeHtml(notesDelimiter || "--");
+      const slideDel = escapeHtml(slideDelimiter || "---");
+
+      const exampleText = isH1
+        ? `# Slide title        \u2190 each H1 starts a new slide\n\nContent here\u2026\n\n${notesDel} duration: 2m      \u2190 notes delimiter + optional duration\nSpeaker notes\u2026\n\n# Next slide\u2026`
+        : `Slide title\n\nContent here\u2026\n\n${notesDel} duration: 2m      \u2190 notes delimiter + optional duration\nSpeaker notes\u2026\n\n${slideDel}\n\nNext slide\u2026`;
+
+      const slideRule = isH1
+        ? `<li><code># H1</code> starts a new slide</li>`
+        : `<li><code>${slideDel}</code> separates slides</li>`;
+
+      return `
+        <div class="delimiter-section-title">Markdown format reference</div>
+        <pre class="delimiter-guide-pre">${exampleText}</pre>
+        <ul class="delimiter-guide-legend">
+          ${slideRule}
+          <li><code>${notesDel}</code> separates slide content from speaker notes</li>
+          <li><code>${notesDel} duration: 2m</code> adds a timed duration <em>(e.g. 30s, 1m30s, 2:00)</em></li>
+        </ul>
+      `;
+    }
+
     function renderDelimiterUI() {
       delimiterOptionEls.forEach((option) => {
         const kind = option.dataset.kind;
@@ -2059,6 +2060,17 @@
       }
       if (notesDelimiterInputEl) {
         notesDelimiterInputEl.value = delimiterPanelEl.hidden ? state.notesDelimiter : delimiterDraft.notes;
+      }
+      if (delimiterGuideEl) {
+        if (delimiterPanelEl.hidden) {
+          delimiterGuideEl.innerHTML = "";
+        } else {
+          delimiterGuideEl.innerHTML = buildDelimiterGuideHTML(
+            delimiterDraft.slideMode,
+            delimiterDraft.slide,
+            delimiterDraft.notes
+          );
+        }
       }
     }
 
@@ -2296,15 +2308,6 @@
         if (appTitleEl) {
           appTitleEl.hidden = false;
         }
-        const isH1Mode = state.slideSplitMode === "h1";
-        const notesDel = escapeHtml(state.notesDelimiter || "--");
-        const slideDel = escapeHtml(state.slideDelimiter || "===");
-        const guideExample = isH1Mode
-          ? `# Slide title        ← each H1 starts a new slide\n\nContent here\u2026\n\n${notesDel} duration: 2m      ← notes delimiter + optional duration\nSpeaker notes\u2026\n\n# Next slide\u2026`
-          : `Slide title\n\nContent here\u2026\n\n${notesDel} duration: 2m      ← notes delimiter + optional duration\nSpeaker notes\u2026\n\n${slideDel}\n\nNext slide\u2026`;
-        const guideSlideRule = isH1Mode
-          ? `<li><code># H1</code> starts a new slide</li>`
-          : `<li><code>${slideDel}</code> separates slides</li>`;
         slideEl.innerHTML = `
           <div class="empty">
             <div>
@@ -2330,15 +2333,6 @@
                   <span>Import MD file</span>
                 </button>
               </div>
-              <details class="empty-guide">
-                <summary class="empty-guide-title">Markdown format reference</summary>
-                <pre>${guideExample}</pre>
-                <ul class="empty-guide-legend">
-                  ${guideSlideRule}
-                  <li><code>${notesDel}</code> separates slide content from speaker notes</li>
-                  <li><code>${notesDel} duration: 2m</code> adds a timed duration <em>(e.g. 30s, 1m30s, 2:00)</em></li>
-                </ul>
-              </details>
             </div>
           </div>
         `;
@@ -2612,7 +2606,7 @@
           delimiterDraft.notes = option.dataset.delimiter || "--";
         } else {
           delimiterDraft.slideMode = "delimiter";
-          delimiterDraft.slide = option.dataset.delimiter || "===";
+          delimiterDraft.slide = option.dataset.delimiter || "---";
         }
         renderDelimiterUI();
       });
