@@ -163,6 +163,7 @@
 
     .slide-content {
       width: min(1100px, 100%);
+      transform-origin: top center;
     }
 
     .train-map {
@@ -515,10 +516,44 @@
       line-height: 1;
     }
 
-    .settings-toggle {
+    .zoom-toggle {
       position: fixed;
       right: 16px;
       bottom: 170px;
+      border: 0;
+      border-radius: 999px;
+      background: #ffffff;
+      color: #2e3c54;
+      width: 44px;
+      height: 44px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(21, 34, 54, 0.14);
+      transition: transform 120ms ease, box-shadow 120ms ease;
+    }
+
+    .zoom-toggle:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 22px rgba(21, 34, 54, 0.18);
+    }
+
+    .zoom-toggle:focus-visible {
+      outline: 3px solid var(--focus-ring);
+      outline-offset: 2px;
+    }
+
+    .zoom-toggle .material-symbols-outlined {
+      font-size: 24px;
+      line-height: 1;
+    }
+
+    .settings-toggle {
+      position: fixed;
+      right: 16px;
+      bottom: 118px;
       border: 0;
       border-radius: 999px;
       background: #ffffff;
@@ -549,8 +584,9 @@
       line-height: 1;
     }
 
-    /* ── Settings panel ── */
-    .settings-panel {
+    /* ── Floating panels ── */
+    .settings-panel,
+    .zoom-panel {
       position: fixed;
       left: 0;
       top: 0;
@@ -570,8 +606,65 @@
       box-shadow: 0 14px 28px rgba(21, 34, 54, 0.2), 0 0 0 3px rgba(255, 255, 255, 0.95);
     }
 
-    .settings-panel[hidden] {
+    .settings-panel[hidden],
+    .zoom-panel[hidden] {
       display: none;
+    }
+
+    .zoom-panel {
+      min-width: 210px;
+      padding: 10px;
+      gap: 10px;
+    }
+
+    .zoom-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .zoom-value {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #23324a;
+      min-width: 48px;
+      text-align: right;
+    }
+
+    .zoom-actions {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .zoom-action {
+      border: 1px solid #d5deeb;
+      border-radius: 8px;
+      padding: 8px 10px;
+      background: #ffffff;
+      color: #23324a;
+      cursor: pointer;
+      font-size: 0.88rem;
+      font-weight: 700;
+      font-family: var(--slide-font);
+      transition: background 100ms ease, border-color 100ms ease, transform 100ms ease;
+    }
+
+    .zoom-action:hover:not(:disabled) {
+      background: #f0f5fc;
+      border-color: #bfd1ea;
+      transform: translateY(-1px);
+    }
+
+    .zoom-action:focus-visible {
+      outline: 3px solid var(--focus-ring);
+      outline-offset: 1px;
+    }
+
+    .zoom-action:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
     }
 
     .settings-swatches {
@@ -1525,6 +1618,7 @@
       .map-toggle:hover:not(:disabled),
       .duration-bar-toggle:hover:not(:disabled),
       .search-toggle:hover,
+      .zoom-toggle:hover,
       .delimiter-toggle:hover,
       .arrows-toggle:hover,
       .station:hover,
@@ -1626,6 +1720,9 @@
   <button id="fullscreenToggle" class="fullscreen-toggle" type="button" aria-label="Enter fullscreen" title="Enter fullscreen (F)">
     <span class="material-symbols-outlined" aria-hidden="true">fullscreen</span>
   </button>
+  <button id="zoomToggle" class="zoom-toggle" type="button" aria-label="Slide zoom" title="Slide zoom" aria-controls="zoomPanel" aria-expanded="false">
+    <span class="material-symbols-outlined" aria-hidden="true">zoom_in</span>
+  </button>
   <button id="settingsToggle" class="settings-toggle" type="button" aria-label="Interface settings" title="Interface settings" aria-controls="settingsPanel" aria-expanded="false">
     <span class="material-symbols-outlined" aria-hidden="true">tune</span>
   </button>
@@ -1649,6 +1746,17 @@
     <div class="delimiter-section-title" style="margin-top:8px">Font</div>
     <div class="settings-fonts" role="group" aria-label="Font choice"></div>
     <button class="settings-reset" type="button" id="settingsReset">Reset to defaults</button>
+  </section>
+  <section id="zoomPanel" class="zoom-panel" role="region" aria-label="Slide zoom controls" hidden>
+    <div class="zoom-panel-header">
+      <div class="delimiter-section-title">Zoom</div>
+      <div id="zoomValue" class="zoom-value" aria-live="polite">100%</div>
+    </div>
+    <div class="zoom-actions" role="group" aria-label="Slide zoom actions">
+      <button id="zoomOut" class="zoom-action" type="button" aria-label="Zoom out">-</button>
+      <button id="zoomReset" class="zoom-action" type="button" aria-label="Reset zoom">100%</button>
+      <button id="zoomIn" class="zoom-action" type="button" aria-label="Zoom in">+</button>
+    </div>
   </section>
   <section id="urlLoadPanel" class="url-load-panel" role="region" aria-label="Load Markdown from URL" hidden>
     <div class="url-load-panel-row">
@@ -1705,6 +1813,12 @@
     const delimiterApplyEl = document.getElementById("delimiterApply");
     const delimiterGuideEl = document.getElementById("delimiterGuide");
     const fullscreenToggleEl = document.getElementById("fullscreenToggle");
+    const zoomToggleEl = document.getElementById("zoomToggle");
+    const zoomPanelEl = document.getElementById("zoomPanel");
+    const zoomValueEl = document.getElementById("zoomValue");
+    const zoomOutEl = document.getElementById("zoomOut");
+    const zoomResetEl = document.getElementById("zoomReset");
+    const zoomInEl = document.getElementById("zoomIn");
     const settingsToggleEl = document.getElementById("settingsToggle");
     const settingsPanelEl = document.getElementById("settingsPanel");
     const settingsSwatchesEl = settingsPanelEl?.querySelector(".settings-swatches");
@@ -1747,10 +1861,12 @@
       mono:  { label: "Monospace",  stack: 'ui-monospace, "SF Mono", "Fira Code", monospace' },
     };
 
-    const SETTINGS_DEFAULTS = { bg: "cloud", font: "sans" };
+    const ZOOM_LEVELS = [0.8, 0.9, 1, 1.1, 1.25, 1.5];
+    const SETTINGS_DEFAULTS = { bg: "cloud", font: "sans", zoom: 1 };
     const SETTINGS_KEY = "slidedeckSettings";
     const appSettings = { ...SETTINGS_DEFAULTS };
     let delimiterAnchorEl = null;
+    let zoomAnchorEl = null;
 
     function announceStatus(message) {
       if (!srStatusEl) {
@@ -2388,7 +2504,64 @@
 
     // ── Settings ──────────────────────────────────────────────────────────
 
-    function applySettings({ bg, font }) {
+    function clampZoomLevel(value) {
+      return ZOOM_LEVELS.includes(value) ? value : SETTINGS_DEFAULTS.zoom;
+    }
+
+    function getCurrentZoomIndex() {
+      return ZOOM_LEVELS.indexOf(appSettings.zoom);
+    }
+
+    function updateZoomUI() {
+      const zoomPercent = Math.round(appSettings.zoom * 100);
+      if (zoomValueEl) {
+        zoomValueEl.textContent = `${zoomPercent}%`;
+      }
+      if (zoomToggleEl) {
+        zoomToggleEl.title = `Slide zoom (${zoomPercent}%)`;
+        zoomToggleEl.setAttribute("aria-label", `Slide zoom (${zoomPercent}%)`);
+      }
+      if (zoomOutEl) {
+        zoomOutEl.disabled = getCurrentZoomIndex() <= 0;
+      }
+      if (zoomInEl) {
+        zoomInEl.disabled = getCurrentZoomIndex() >= ZOOM_LEVELS.length - 1;
+      }
+      if (zoomResetEl) {
+        zoomResetEl.disabled = appSettings.zoom === SETTINGS_DEFAULTS.zoom;
+      }
+    }
+
+    function applyZoomToCurrentSlide() {
+      const contentEl = slideEl.querySelector(".slide-content");
+      if (contentEl) {
+        contentEl.style.zoom = String(appSettings.zoom);
+      }
+      updateZoomUI();
+      updateSlideAlignment();
+    }
+
+    function stepZoom(direction) {
+      const currentIndex = getCurrentZoomIndex();
+      if (currentIndex === -1) {
+        return;
+      }
+      const nextIndex = Math.min(Math.max(currentIndex + direction, 0), ZOOM_LEVELS.length - 1);
+      if (nextIndex !== currentIndex) {
+        applySettings({ ...appSettings, zoom: ZOOM_LEVELS[nextIndex] });
+        announceStatus(`Zoom ${Math.round(appSettings.zoom * 100)} percent.`);
+      }
+    }
+
+    function resetZoom() {
+      if (appSettings.zoom === SETTINGS_DEFAULTS.zoom) {
+        return;
+      }
+      applySettings({ ...appSettings, zoom: SETTINGS_DEFAULTS.zoom });
+      announceStatus("Zoom 100 percent.");
+    }
+
+    function applySettings({ bg, font, zoom }) {
       const bgPreset = BG_PRESETS[bg] || BG_PRESETS.cloud;
       const fontPreset = FONT_PRESETS[font] || FONT_PRESETS.sans;
       const root = document.documentElement.style;
@@ -2397,13 +2570,19 @@
       root.setProperty("--slide-font", fontPreset.stack);
       appSettings.bg = bg;
       appSettings.font = font;
+      appSettings.zoom = clampZoomLevel(zoom);
       saveSettings();
       renderSettingsUI();
+      applyZoomToCurrentSlide();
     }
 
     function saveSettings() {
       try {
-        localStorage.setItem(SETTINGS_KEY, JSON.stringify({ bg: appSettings.bg, font: appSettings.font }));
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify({
+          bg: appSettings.bg,
+          font: appSettings.font,
+          zoom: appSettings.zoom
+        }));
       } catch (_) {}
     }
 
@@ -2414,6 +2593,7 @@
           const parsed = JSON.parse(raw);
           if (parsed.bg && BG_PRESETS[parsed.bg])     appSettings.bg   = parsed.bg;
           if (parsed.font && FONT_PRESETS[parsed.font]) appSettings.font = parsed.font;
+          if (typeof parsed.zoom === "number") appSettings.zoom = clampZoomLevel(parsed.zoom);
         }
       } catch (_) {}
       applySettings(appSettings);
@@ -2467,6 +2647,31 @@
       if (left < margin) left = margin;
       settingsPanelEl.style.top  = `${top}px`;
       settingsPanelEl.style.left = `${left}px`;
+    }
+
+    function setZoomPanelOpen(open, anchorEl = null) {
+      if (!zoomPanelEl) return;
+      zoomPanelEl.hidden = !open;
+      if (zoomToggleEl) zoomToggleEl.setAttribute("aria-expanded", String(open));
+      if (open) {
+        if (anchorEl) zoomAnchorEl = anchorEl;
+        updateZoomUI();
+        positionZoomPanel(zoomAnchorEl);
+      }
+    }
+
+    function positionZoomPanel(anchorEl) {
+      if (!zoomPanelEl || !anchorEl || zoomPanelEl.hidden) return;
+      const rect = anchorEl.getBoundingClientRect();
+      const panelRect = zoomPanelEl.getBoundingClientRect();
+      const margin = 12;
+      const gap = 10;
+      let top = rect.top - panelRect.height - gap;
+      if (top < margin) top = rect.bottom + gap;
+      let left = rect.right - panelRect.width;
+      if (left < margin) left = margin;
+      zoomPanelEl.style.top = `${top}px`;
+      zoomPanelEl.style.left = `${left}px`;
     }
 
     // ─────────────────────────────────────────────────────────────────────
@@ -2789,6 +2994,7 @@
           <div class="slide-content">${state.slides[state.index].html || "<p></p>"}</div>
         </div>
       `;
+      applyZoomToCurrentSlide();
       assignHeadingIds();
       configureEmbeds();
       enhanceMediaAccessibility();
@@ -2817,7 +3023,7 @@
       const padTop = parseFloat(styles.paddingTop) || 0;
       const padBottom = parseFloat(styles.paddingBottom) || 0;
       const availableHeight = slideEl.clientHeight - padTop - padBottom;
-      const contentHeight = contentEl.offsetHeight;
+      const contentHeight = contentEl.getBoundingClientRect().height;
       slideEl.classList.toggle("is-tall", contentHeight > availableHeight);
     }
 
@@ -3189,6 +3395,21 @@
         return;
       }
 
+      if (event.key === "Escape") {
+        if (state.search.panelOpen) {
+          setSearchPanelOpen(false);
+          return;
+        }
+        if (!zoomPanelEl?.hidden) {
+          setZoomPanelOpen(false);
+          return;
+        }
+        if (!settingsPanelEl?.hidden) {
+          setSettingsPanelOpen(false);
+          return;
+        }
+      }
+
       if (isInteractiveTarget(event.target)) {
         return;
       }
@@ -3208,9 +3429,6 @@
       }
       if (event.key.toLowerCase() === "f" && !event.ctrlKey && !event.metaKey && !event.altKey) {
         toggleFullscreen();
-      }
-      if (event.key === "Escape" && state.search.panelOpen) {
-        setSearchPanelOpen(false);
       }
     });
 
@@ -3244,8 +3462,29 @@
     document.addEventListener("fullscreenchange", updateFullscreenButton);
     // ─────────────────────────────────────────────────────────────────────
 
+    // ── Zoom panel events ─────────────────────────────────────────────────
+    zoomToggleEl?.addEventListener("click", () => {
+      setSettingsPanelOpen(false);
+      setZoomPanelOpen(zoomPanelEl.hidden, zoomToggleEl);
+    });
+
+    zoomOutEl?.addEventListener("click", () => {
+      stepZoom(-1);
+    });
+
+    zoomInEl?.addEventListener("click", () => {
+      stepZoom(1);
+    });
+
+    zoomResetEl?.addEventListener("click", () => {
+      resetZoom();
+    });
+
+    // ─────────────────────────────────────────────────────────────────────
+
     // ── Settings panel events ─────────────────────────────────────────────
     settingsToggleEl?.addEventListener("click", () => {
+      setZoomPanelOpen(false);
       setSettingsPanelOpen(settingsPanelEl.hidden, settingsToggleEl);
     });
 
@@ -3259,11 +3498,20 @@
     });
 
     document.addEventListener("click", (e) => {
+      if (!zoomPanelEl?.hidden &&
+          !zoomPanelEl.contains(e.target) &&
+          !zoomToggleEl.contains(e.target)) {
+        setZoomPanelOpen(false);
+      }
       if (!settingsPanelEl?.hidden &&
           !settingsPanelEl.contains(e.target) &&
           !settingsToggleEl.contains(e.target)) { // use contains() to cover clicks on the icon span inside the button
         setSettingsPanelOpen(false);
       }
+    });
+
+    window.addEventListener("resize", () => {
+      if (!zoomPanelEl?.hidden) positionZoomPanel(zoomAnchorEl);
     });
 
     window.addEventListener("resize", () => {
